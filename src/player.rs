@@ -2,11 +2,18 @@ use agb::display::object::Object;
 use agb::display::{GraphicsFrame, Priority};
 use agb::include_aseprite;
 
-use crate::{ActionType, PlayerState};
+use crate::ActionType;
 
 include_aseprite! {
     mod player,
     "gfx/player.aseprite"
+}
+
+enum PlayerState {
+    Idle,
+    Attack,
+    Shield,
+    Jump,
 }
 
 pub struct Player {
