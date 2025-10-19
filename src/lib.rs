@@ -6,7 +6,7 @@
 
 use agb::display::object::Object;
 use agb::display::tiled::{RegularBackground, RegularBackgroundSize, TileFormat, VRAM_MANAGER};
-use agb::display::Priority;
+use agb::display::{Priority, object};
 use agb::input::{Button, ButtonController};
 use agb::{include_aseprite, include_background_gfx};
 use player::*;
@@ -17,16 +17,23 @@ pub mod gamestate;
 pub mod player;
 pub mod scenario;
 
-
 include_background_gfx!(
     mod background,
     game => deduplicate "gfx/background.png",
+);
+
+include_aseprite!(
+    mod buttons,
+    "gfx/blue_button.aseprite",
+    "gfx/red_button.aseprite",
+    "gfx/green_button.aseprite"
 );
 
 include_aseprite! {
     mod enemy,
     "gfx/enemy.aseprite"
 }
+
 pub enum ActionType {
     Attack,
     Shield,
@@ -50,9 +57,20 @@ pub fn main(mut gba: agb::Gba) -> ! {
     enemy.set_pos((130, 40));
     enemy.set_priority(Priority::P0);
 
+    let mut button_left = Object::new(buttons::BLUE.sprite(0));
+    button_left.set_pos((90 - 8, 135 - 7));
+
+    let mut button_middle = Object::new(buttons::GREEN.sprite(0));
+    button_middle.set_pos((111 - 8, 135 - 7));
+
+    let mut button_right = Object::new(buttons::RED.sprite(0));
+    button_right.set_pos((132 - 8, 135 - 7));
+
     game_bg.fill_with(&background::game);
 
     let mut game = GameState::new();
+
+    let mut counter = 0;
 
     loop {
         let mut input = ButtonController::new();
@@ -62,10 +80,18 @@ pub fn main(mut gba: agb::Gba) -> ! {
 
         game.draw(&mut frame);
 
-        player.update();
+        if counter > 6 {
+            player.update();
+            counter = 0;
+        }
+
         player.draw(&mut frame);
 
         enemy.show(&mut frame);
+
+        button_left.show(&mut frame);
+        button_middle.show(&mut frame);
+        button_right.show(&mut frame);
 
         frame.commit();
         input.update();
@@ -85,6 +111,7 @@ pub fn main(mut gba: agb::Gba) -> ! {
         if input.is_just_pressed(Button::A) {
             game.do_action(ActionType::Jump, &mut player);
         }
+
+        counter += 1;
     }
 }
-

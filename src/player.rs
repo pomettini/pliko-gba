@@ -61,6 +61,8 @@ impl Player {
 
         self.anim_frame += 1;
         self.anim_frame %= 2;
+
+        self.state = PlayerState::Idle;
     }
 
     pub fn draw(&self, frame: &mut GraphicsFrame<'_>) {

@@ -18,15 +18,15 @@ impl GameState {
     pub fn new() -> Self {
         let mut scenario = Scenario::new();
         scenario.randomize();
-        scenario.setup();
+        scenario.assign();
 
         Self { scenario }
     }
 
     pub fn do_action(&mut self, action: ActionType, player: &mut Player) {
         player.perform_action(action);
-        self.scenario.randomize();
-        self.scenario.setup();
+        self.scenario.next();
+        self.scenario.assign();
     }
 
     pub fn draw(&mut self, frame: &mut GraphicsFrame<'_>) {

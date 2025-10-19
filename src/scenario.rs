@@ -100,7 +100,18 @@ impl Scenario {
         ];
     }
 
-    pub fn setup(&mut self) {
+    pub fn next(&mut self) {
+        let scenarios = [
+            ScenarioType::Water,
+            ScenarioType::Volcano,
+            ScenarioType::Swamp,
+        ];
+
+        self.state.rotate_right(1);
+        self.state[0] = scenarios[rng::next_i32() as usize % 3];
+    }
+
+    pub fn assign(&mut self) {
         let small = get_object(&ScenarioSize::Small, &self.state[0]);
 
         let mut small_sprite = [
