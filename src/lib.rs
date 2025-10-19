@@ -53,7 +53,6 @@ pub fn main(mut gba: agb::Gba) -> ! {
     game_bg.fill_with(&background::game);
 
     let mut game = GameState::new();
-    game.reset();
 
     loop {
         let mut input = ButtonController::new();

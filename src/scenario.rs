@@ -31,33 +31,14 @@ enum ScenarioSize {
     Full,
 }
 
+#[derive(Copy, Clone)]
 enum ScenarioType {
     Water,
     Volcano,
     Swamp,
 }
 
-fn get_random_small() -> &'static Tag {
-    let elements = [&blue::SMALL, &green::SMALL, &red::SMALL];
-    elements[(rng::next_i32() as usize) % 3]
-}
-
-fn get_random_medium() -> &'static Tag {
-    let elements = [&blue::MEDIUM, &green::MEDIUM, &red::MEDIUM];
-    elements[(rng::next_i32() as usize) % 3]
-}
-
-fn get_random_big() -> &'static Tag {
-    let elements = [&blue::BIG, &green::BIG, &red::BIG];
-    elements[(rng::next_i32() as usize) % 3]
-}
-
-fn get_random_full() -> &'static Tag {
-    let elements = [&blue::FULL, &green::FULL, &red::FULL];
-    elements[(rng::next_i32() as usize) % 3]
-}
-
-fn get_object(s_size: ScenarioSize, s_type: ScenarioType) -> &'static Tag {
+const fn get_object(s_size: &ScenarioSize, s_type: &ScenarioType) -> &'static Tag {
     match s_type {
         ScenarioType::Water => match s_size {
             ScenarioSize::Small => &blue::SMALL,
@@ -81,6 +62,7 @@ fn get_object(s_size: ScenarioSize, s_type: ScenarioType) -> &'static Tag {
 }
 
 pub struct Scenario {
+    state: [ScenarioType; 4],
     small_sprite: [Option<Object>; 3],
     medium_sprite: [Option<Object>; 4],
     big_sprite: [Option<Object>; 4],
@@ -90,6 +72,12 @@ pub struct Scenario {
 impl Scenario {
     pub fn new() -> Self {
         Self {
+            state: [
+                ScenarioType::Water,
+                ScenarioType::Water,
+                ScenarioType::Water,
+                ScenarioType::Water,
+            ],
             small_sprite: [const { None }; 3],
             medium_sprite: [const { None }; 4],
             big_sprite: [const { None }; 4],
@@ -97,14 +85,24 @@ impl Scenario {
         }
     }
 
-    pub fn reset(&mut self) {
-        self.set_small(get_random_small());
-        self.set_medium(get_random_medium());
-        self.set_big(get_random_big());
-        self.set_full(get_random_full());
+    pub fn randomize(&mut self) {
+        let scenarios = [
+            ScenarioType::Water,
+            ScenarioType::Volcano,
+            ScenarioType::Swamp,
+        ];
+
+        self.state = [
+            scenarios[rng::next_i32() as usize % 3],
+            scenarios[rng::next_i32() as usize % 3],
+            scenarios[rng::next_i32() as usize % 3],
+            scenarios[rng::next_i32() as usize % 3],
+        ];
     }
 
-    pub fn set_small(&mut self, small: &Tag) {
+    pub fn setup(&mut self) {
+        let small = get_object(&ScenarioSize::Small, &self.state[0]);
+
         let mut small_sprite = [
             Object::new(small.sprite(0)),
             Object::new(small.sprite(1)),
@@ -116,9 +114,9 @@ impl Scenario {
         small_sprite[2].set_pos((80 + 64, 8));
 
         self.small_sprite = small_sprite.map(Some);
-    }
 
-    fn set_medium(&mut self, medium: &Tag) {
+        let medium = get_object(&ScenarioSize::Medium, &self.state[1]);
+
         let mut medium_sprite = [
             Object::new(medium.sprite(0)),
             Object::new(medium.sprite(1)),
@@ -132,9 +130,9 @@ impl Scenario {
         medium_sprite[3].set_pos((69 + 96, 16));
 
         self.medium_sprite = medium_sprite.map(Some);
-    }
 
-    fn set_big(&mut self, big: &Tag) {
+        let big = get_object(&ScenarioSize::Big, &self.state[2]);
+
         let mut big_sprite = [
             Object::new(big.sprite(0)),
             Object::new(big.sprite(1)),
@@ -148,9 +146,9 @@ impl Scenario {
         big_sprite[3].set_pos((56 + 96, 24));
 
         self.big_sprite = big_sprite.map(Some);
-    }
 
-    fn set_full(&mut self, full: &Tag) {
+        let full = get_object(&ScenarioSize::Full, &self.state[3]);
+
         let mut full_sprite = [
             Object::new(full.sprite(0)),
             Object::new(full.sprite(1)),
