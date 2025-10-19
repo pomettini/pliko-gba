@@ -8,3 +8,4 @@
 fn entry(mut gba: agb::Gba) -> ! {
     pliko::main(gba)
 }
+
