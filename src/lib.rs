@@ -15,6 +15,8 @@ use crate::gamestate::GameState;
 
 pub mod gamestate;
 pub mod player;
+pub mod scenario;
+
 
 include_background_gfx!(
     mod background,
@@ -86,3 +88,4 @@ pub fn main(mut gba: agb::Gba) -> ! {
         }
     }
 }
+
