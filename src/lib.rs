@@ -4,11 +4,11 @@
 #![cfg_attr(test, reexport_test_harness_main = "test_main")]
 #![cfg_attr(test, test_runner(agb::test_runner::test_runner))]
 
-use agb::display::object::{Object, Tag};
+use agb::display::object::Object;
 use agb::display::tiled::{RegularBackground, RegularBackgroundSize, TileFormat, VRAM_MANAGER};
-use agb::display::{GraphicsFrame, Priority};
+use agb::display::Priority;
 use agb::input::{Button, ButtonController};
-use agb::{include_aseprite, include_background_gfx, rng};
+use agb::{include_aseprite, include_background_gfx};
 use player::*;
 
 use crate::gamestate::GameState;
@@ -25,8 +25,7 @@ include_aseprite! {
     mod enemy,
     "gfx/enemy.aseprite"
 }
-
-enum ActionType {
+pub enum ActionType {
     Attack,
     Shield,
     Jump,

@@ -22,17 +22,23 @@ pub struct Player {
     anim_frame: usize,
 }
 
+impl Default for Player {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Player {
     pub fn new() -> Self {
         let mut player = Object::new(player::IDLE.sprite(0));
         player.set_pos((50, 60));
         player.set_priority(Priority::P0);
 
-        return Self {
+        Self {
             object: player,
             state: PlayerState::Idle,
             anim_frame: 0,
-        };
+        }
     }
 
     pub fn perform_action(&mut self, action: ActionType) {

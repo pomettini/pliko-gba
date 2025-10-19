@@ -1,8 +1,6 @@
 use agb::display::object::{Object, Tag};
-use agb::display::tiled::{RegularBackground, RegularBackgroundSize, TileFormat, VRAM_MANAGER};
 use agb::display::{GraphicsFrame, Priority};
-use agb::input::{Button, ButtonController};
-use agb::{include_aseprite, include_background_gfx, rng};
+use agb::{include_aseprite, rng};
 
 use crate::ActionType;
 use crate::player::Player;
@@ -86,6 +84,12 @@ pub struct GameState {
     medium_sprite: [Option<Object>; 4],
     big_sprite: [Option<Object>; 4],
     full_sprite: [Option<Object>; 6],
+}
+
+impl Default for GameState {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl GameState {
@@ -182,28 +186,20 @@ impl GameState {
     }
 
     pub fn draw(&mut self, frame: &mut GraphicsFrame<'_>) {
-        for sprite in &self.small_sprite {
-            if let Some(s) = sprite {
-                s.show(frame);
-            }
+        for s in self.small_sprite.iter().flatten() {
+            s.show(frame);
         }
 
-        for sprite in &self.medium_sprite {
-            if let Some(s) = sprite {
-                s.show(frame);
-            }
+        for s in self.medium_sprite.iter().flatten() {
+            s.show(frame);
         }
 
-        for sprite in &self.big_sprite {
-            if let Some(s) = sprite {
-                s.show(frame);
-            }
+        for s in self.big_sprite.iter().flatten() {
+            s.show(frame);
         }
 
-        for sprite in &self.full_sprite {
-            if let Some(s) = sprite {
-                s.show(frame);
-            }
+        for s in self.full_sprite.iter().flatten() {
+            s.show(frame);
         }
     }
 }
