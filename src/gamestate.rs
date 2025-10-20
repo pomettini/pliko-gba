@@ -4,17 +4,26 @@ use crate::ActionType;
 use crate::player::Player;
 use crate::scenario::Scenario;
 
-pub struct GameState {
+pub enum GameState {
+    Game,
+    GameOver,
+}
+
+pub struct Game {
+    pub state: GameState,
     pub scenario: Scenario,
 }
 
-impl GameState {
+impl Game {
     pub fn new() -> Self {
         let mut scenario = Scenario::new();
         scenario.randomize();
         scenario.assign();
 
-        Self { scenario }
+        Self {
+            state: GameState::Game,
+            scenario,
+        }
     }
 
     pub fn do_action(&mut self, action: ActionType, player: &mut Player) {

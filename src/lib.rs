@@ -8,10 +8,11 @@ use agb::display::Priority;
 use agb::display::object::Object;
 use agb::display::tiled::{RegularBackground, RegularBackgroundSize, TileFormat, VRAM_MANAGER};
 use agb::input::{Button, ButtonController};
-use agb::{include_aseprite, include_background_gfx};
+use agb::sound::mixer::{Frequency, SoundChannel, SoundData};
+use agb::{include_aseprite, include_background_gfx, include_wav};
 use player::*;
 
-use crate::gamestate::GameState;
+use crate::gamestate::Game;
 use crate::scenario::{Scenario, ScenarioType};
 
 pub mod gamestate;
@@ -85,12 +86,21 @@ pub fn main(mut gba: agb::Gba) -> ! {
     let mut button_right = Object::new(buttons::RED.sprite(0));
     button_right.set_pos((132 - 8, 135 - 7));
 
-    let mut game = GameState::new();
+    let mut game = Game::new();
 
     game_bg.fill_with(&background::game);
     update_full_background(&game.scenario, &mut full_bg);
 
+    static BACKGROUND_MUSIC: SoundData = include_wav!("sfx/game_loop.wav");
+
+    let mut mixer = gba.mixer.mixer(Frequency::Hz18157);
+
+    let mut background_music = SoundChannel::new(BACKGROUND_MUSIC);
+    background_music.stereo();
+
     let mut counter = 0;
+
+    mixer.play_sound(background_music);
 
     loop {
         let mut input = ButtonController::new();
@@ -114,6 +124,7 @@ pub fn main(mut gba: agb::Gba) -> ! {
         button_middle.show(&mut frame);
         button_right.show(&mut frame);
 
+        mixer.frame();
         frame.commit();
         input.update();
 
