@@ -5,13 +5,7 @@ use crate::player::Player;
 use crate::scenario::Scenario;
 
 pub struct GameState {
-    scenario: Scenario,
-}
-
-impl Default for GameState {
-    fn default() -> Self {
-        Self::new()
-    }
+    pub scenario: Scenario,
 }
 
 impl GameState {

@@ -32,7 +32,7 @@ enum ScenarioSize {
 }
 
 #[derive(Copy, Clone)]
-enum ScenarioType {
+pub enum ScenarioType {
     Water,
     Volcano,
     Swamp,
@@ -62,7 +62,7 @@ const fn get_object(s_size: &ScenarioSize, s_type: &ScenarioType) -> &'static Ta
 }
 
 pub struct Scenario {
-    state: [ScenarioType; 4],
+    pub state: [ScenarioType; 4],
     small_sprite: [Object; 3],
     medium_sprite: [Object; 4],
     big_sprite: [Object; 4],

@@ -12,6 +12,7 @@ use agb::{include_aseprite, include_background_gfx};
 use player::*;
 
 use crate::gamestate::GameState;
+use crate::scenario::{Scenario, ScenarioType};
 
 pub mod gamestate;
 pub mod player;
@@ -19,7 +20,7 @@ pub mod scenario;
 
 include_background_gfx!(
     mod background,
-    // game => deduplicate "gfx/background.png",
+    game => deduplicate "gfx/background.png",
     blue => deduplicate "gfx/background-full-blue.png",
     red => deduplicate "gfx/background-full-red.png",
     green => deduplicate "gfx/background-full-green.png",
@@ -41,6 +42,15 @@ pub enum ActionType {
     Attack,
     Shield,
     Jump,
+}
+
+pub fn update_full_background(scenario: &Scenario, background: &mut RegularBackground) {
+    let bg = match scenario.state[3] {
+        ScenarioType::Water => &background::blue,
+        ScenarioType::Volcano => &background::red,
+        ScenarioType::Swamp => &background::green,
+    };
+    background.fill_with(&bg);
 }
 
 pub fn main(mut gba: agb::Gba) -> ! {
@@ -75,10 +85,10 @@ pub fn main(mut gba: agb::Gba) -> ! {
     let mut button_right = Object::new(buttons::RED.sprite(0));
     button_right.set_pos((132 - 8, 135 - 7));
 
-    game_bg.fill_with(&background::red);
-    full_bg.fill_with(&background::red);
-
     let mut game = GameState::new();
+
+    game_bg.fill_with(&background::game);
+    update_full_background(&game.scenario, &mut full_bg);
 
     let mut counter = 0;
 
@@ -107,23 +117,19 @@ pub fn main(mut gba: agb::Gba) -> ! {
         frame.commit();
         input.update();
 
-        if input.is_just_pressed(Button::LEFT)
-            || input.is_just_pressed(Button::UP)
-            || input.is_just_pressed(Button::RIGHT)
-            || input.is_just_pressed(Button::DOWN)
-        {
-            full_bg.fill_with(&background::blue);
+        if input.is_just_pressed(Button::L) {
             game.do_action(ActionType::Attack, &mut player);
+            update_full_background(&game.scenario, &mut full_bg);
         }
 
-        if input.is_just_pressed(Button::B) {
-            full_bg.fill_with(&background::red);
+        if input.is_just_pressed(Button::B) || input.is_just_pressed(Button::A) {
             game.do_action(ActionType::Shield, &mut player);
+            update_full_background(&game.scenario, &mut full_bg);
         }
 
-        if input.is_just_pressed(Button::A) {
-            full_bg.fill_with(&background::green);
+        if input.is_just_pressed(Button::R) {
             game.do_action(ActionType::Jump, &mut player);
+            update_full_background(&game.scenario, &mut full_bg);
         }
 
         counter += 1;
