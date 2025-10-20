@@ -50,11 +50,11 @@ impl Player {
     }
 
     pub fn update(&mut self) {
-        self.object = match self.state {
-            PlayerState::Idle => Object::new(player::IDLE.sprite(self.anim_frame)),
-            PlayerState::Attack => Object::new(player::ATTACK.sprite(0)),
-            PlayerState::Shield => Object::new(player::SHIELD.sprite(0)),
-            PlayerState::Jump => Object::new(player::JUMP.sprite(0)),
+        match self.state {
+            PlayerState::Idle => self.object.set_sprite(player::IDLE.sprite(self.anim_frame)),
+            PlayerState::Attack => self.object.set_sprite(player::ATTACK.sprite(0)),
+            PlayerState::Shield => self.object.set_sprite(player::SHIELD.sprite(0)),
+            PlayerState::Jump => self.object.set_sprite(player::JUMP.sprite(0)),
         };
         self.object.set_pos((50, 60));
         self.object.set_priority(Priority::P0);

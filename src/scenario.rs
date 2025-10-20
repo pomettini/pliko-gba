@@ -63,10 +63,10 @@ const fn get_object(s_size: &ScenarioSize, s_type: &ScenarioType) -> &'static Ta
 
 pub struct Scenario {
     state: [ScenarioType; 4],
-    small_sprite: [Option<Object>; 3],
-    medium_sprite: [Option<Object>; 4],
-    big_sprite: [Option<Object>; 4],
-    full_sprite: [Option<Object>; 6],
+    small_sprite: [Object; 3],
+    medium_sprite: [Object; 4],
+    big_sprite: [Object; 4],
+    full_sprite: [Object; 6],
 }
 
 impl Scenario {
@@ -78,10 +78,31 @@ impl Scenario {
                 ScenarioType::Water,
                 ScenarioType::Water,
             ],
-            small_sprite: [const { None }; 3],
-            medium_sprite: [const { None }; 4],
-            big_sprite: [const { None }; 4],
-            full_sprite: [const { None }; 6],
+            small_sprite: [
+                Object::new(blue::SMALL.sprite(0)),
+                Object::new(blue::SMALL.sprite(0)),
+                Object::new(blue::SMALL.sprite(0)),
+            ],
+            medium_sprite: [
+                Object::new(blue::SMALL.sprite(0)),
+                Object::new(blue::SMALL.sprite(0)),
+                Object::new(blue::SMALL.sprite(0)),
+                Object::new(blue::SMALL.sprite(0)),
+            ],
+            big_sprite: [
+                Object::new(blue::SMALL.sprite(0)),
+                Object::new(blue::SMALL.sprite(0)),
+                Object::new(blue::SMALL.sprite(0)),
+                Object::new(blue::SMALL.sprite(0)),
+            ],
+            full_sprite: [
+                Object::new(blue::FULL.sprite(0)),
+                Object::new(blue::FULL.sprite(0)),
+                Object::new(blue::FULL.sprite(0)),
+                Object::new(blue::FULL.sprite(0)),
+                Object::new(blue::FULL.sprite(0)),
+                Object::new(blue::FULL.sprite(0)),
+            ],
         }
     }
 
@@ -114,91 +135,76 @@ impl Scenario {
     pub fn assign(&mut self) {
         let small = get_object(&ScenarioSize::Small, &self.state[0]);
 
-        let mut small_sprite = [
-            Object::new(small.sprite(0)),
-            Object::new(small.sprite(1)),
-            Object::new(small.sprite(2)),
-        ];
+        self.small_sprite[0].set_sprite(small.sprite(0));
+        self.small_sprite[1].set_sprite(small.sprite(1));
+        self.small_sprite[2].set_sprite(small.sprite(2));
 
-        small_sprite[0].set_pos((80, 8));
-        small_sprite[1].set_pos((80 + 32, 8));
-        small_sprite[2].set_pos((80 + 64, 8));
-
-        self.small_sprite = small_sprite.map(Some);
+        self.small_sprite[0].set_pos((80, 8));
+        self.small_sprite[1].set_pos((80 + 32, 8));
+        self.small_sprite[2].set_pos((80 + 64, 8));
 
         let medium = get_object(&ScenarioSize::Medium, &self.state[1]);
 
-        let mut medium_sprite = [
-            Object::new(medium.sprite(0)),
-            Object::new(medium.sprite(1)),
-            Object::new(medium.sprite(2)),
-            Object::new(medium.sprite(3)),
-        ];
+        self.medium_sprite[0].set_sprite(medium.sprite(0));
+        self.medium_sprite[1].set_sprite(medium.sprite(1));
+        self.medium_sprite[2].set_sprite(medium.sprite(2));
+        self.medium_sprite[3].set_sprite(medium.sprite(3));
 
-        medium_sprite[0].set_pos((69, 16));
-        medium_sprite[1].set_pos((69 + 32, 16));
-        medium_sprite[2].set_pos((69 + 64, 16));
-        medium_sprite[3].set_pos((69 + 96, 16));
-
-        self.medium_sprite = medium_sprite.map(Some);
+        self.medium_sprite[0].set_pos((69, 16));
+        self.medium_sprite[1].set_pos((69 + 32, 16));
+        self.medium_sprite[2].set_pos((69 + 64, 16));
+        self.medium_sprite[3].set_pos((69 + 96, 16));
 
         let big = get_object(&ScenarioSize::Big, &self.state[2]);
 
-        let mut big_sprite = [
-            Object::new(big.sprite(0)),
-            Object::new(big.sprite(1)),
-            Object::new(big.sprite(2)),
-            Object::new(big.sprite(3)),
-        ];
+        self.big_sprite[0].set_sprite(big.sprite(0));
+        self.big_sprite[1].set_sprite(big.sprite(1));
+        self.big_sprite[2].set_sprite(big.sprite(2));
+        self.big_sprite[3].set_sprite(big.sprite(3));
 
-        big_sprite[0].set_pos((56, 24));
-        big_sprite[1].set_pos((56 + 32, 24));
-        big_sprite[2].set_pos((56 + 64, 24));
-        big_sprite[3].set_pos((56 + 96, 24));
-
-        self.big_sprite = big_sprite.map(Some);
+        self.big_sprite[0].set_pos((56, 24));
+        self.big_sprite[1].set_pos((56 + 32, 24));
+        self.big_sprite[2].set_pos((56 + 64, 24));
+        self.big_sprite[3].set_pos((56 + 96, 24));
 
         let full = get_object(&ScenarioSize::Full, &self.state[3]);
 
-        let mut full_sprite = [
-            Object::new(full.sprite(0)),
-            Object::new(full.sprite(1)),
-            Object::new(full.sprite(2)),
-            Object::new(full.sprite(3)),
-            Object::new(full.sprite(4)),
-            Object::new(full.sprite(5)),
-        ];
-        full_sprite[0].set_pos((40, 32));
-        full_sprite[0].set_priority(Priority::P1);
-        full_sprite[1].set_pos((40 + 64, 32));
-        full_sprite[1].set_priority(Priority::P1);
-        full_sprite[2].set_pos((40 + 128, 32));
-        full_sprite[2].set_priority(Priority::P1);
-        full_sprite[3].set_pos((40, 32 + 64));
-        full_sprite[3].set_priority(Priority::P1);
-        full_sprite[4].set_pos((40 + 64, 32 + 64));
-        full_sprite[4].set_priority(Priority::P1);
-        full_sprite[5].set_pos((40 + 128, 32 + 64));
-        full_sprite[5].set_priority(Priority::P1);
+        self.full_sprite[0].set_sprite(full.sprite(0));
+        self.full_sprite[1].set_sprite(full.sprite(1));
+        self.full_sprite[2].set_sprite(full.sprite(2));
+        self.full_sprite[3].set_sprite(full.sprite(3));
+        self.full_sprite[4].set_sprite(full.sprite(4));
+        self.full_sprite[5].set_sprite(full.sprite(5));
 
-        self.full_sprite = full_sprite.map(Some);
+        self.full_sprite[0].set_pos((40, 32));
+        self.full_sprite[0].set_priority(Priority::P1);
+        self.full_sprite[1].set_pos((40 + 64, 32));
+        self.full_sprite[1].set_priority(Priority::P1);
+        self.full_sprite[2].set_pos((40 + 128, 32));
+        self.full_sprite[2].set_priority(Priority::P1);
+        self.full_sprite[3].set_pos((40, 32 + 64));
+        self.full_sprite[3].set_priority(Priority::P1);
+        self.full_sprite[4].set_pos((40 + 64, 32 + 64));
+        self.full_sprite[4].set_priority(Priority::P1);
+        self.full_sprite[5].set_pos((40 + 128, 32 + 64));
+        self.full_sprite[5].set_priority(Priority::P1);
     }
 
     pub fn draw(&mut self, frame: &mut GraphicsFrame<'_>) {
-        for s in self.small_sprite.iter().flatten() {
-            s.show(frame);
+        for sprite in &self.small_sprite {
+            sprite.show(frame);
         }
 
-        for s in self.medium_sprite.iter().flatten() {
-            s.show(frame);
+        for sprite in &self.medium_sprite {
+            sprite.show(frame);
         }
 
-        for s in self.big_sprite.iter().flatten() {
-            s.show(frame);
+        for sprite in &self.big_sprite {
+            sprite.show(frame);
         }
 
-        for s in self.full_sprite.iter().flatten() {
-            s.show(frame);
+        for sprite in &self.full_sprite {
+            sprite.show(frame);
         }
     }
 }
