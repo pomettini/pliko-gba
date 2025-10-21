@@ -11,7 +11,10 @@ use agb::display::{Palette16, Priority, Rgb15};
 use agb::fixnum::vec2;
 use agb::input::{Button, ButtonController};
 use agb::sound::mixer::{Frequency, SoundChannel, SoundData};
-use agb::{include_aseprite, include_background_gfx, include_font, include_wav, println};
+use agb::{
+    include_aseprite, include_aseprite_256, include_background_gfx, include_font, include_wav,
+    println,
+};
 use player::*;
 
 extern crate alloc;
@@ -34,12 +37,10 @@ include_background_gfx!(
 
 include_aseprite!(
     mod buttons,
-    "gfx/blue_button.aseprite",
-    "gfx/red_button.aseprite",
-    "gfx/green_button.aseprite"
+    "gfx/buttons.aseprite",
 );
 
-include_aseprite! {
+include_aseprite_256! {
     mod enemy,
     "gfx/enemy.aseprite"
 }
@@ -99,9 +100,21 @@ pub fn main(mut gba: agb::Gba) -> ! {
 
     let mut player = Player::new();
 
-    let mut enemy = Object::new(enemy::IDLE.sprite(0));
-    enemy.set_pos((130, 40));
-    enemy.set_priority(Priority::P0);
+    let mut enemy0 = Object::new(enemy::BIGROCKIDLE.sprite(0));
+    enemy0.set_pos((121 + 60, 54));
+    enemy0.set_priority(Priority::P3);
+
+    let mut enemy1 = Object::new(enemy::LERCIOIDLE.sprite(0));
+    enemy1.set_pos((121 + 40, 54));
+    enemy1.set_priority(Priority::P2);
+
+    let mut enemy2 = Object::new(enemy::GOBLINIDLE.sprite(0));
+    enemy2.set_pos((121 + 20, 54));
+    enemy2.set_priority(Priority::P1);
+
+    let mut enemy3 = Object::new(enemy::MAGEIDLE.sprite(0));
+    enemy3.set_pos((121, 54));
+    enemy3.set_priority(Priority::P0);
 
     let mut button_left = Object::new(buttons::BLUE.sprite(0));
     button_left.set_pos((90 - 8, 135 - 7));
@@ -148,7 +161,10 @@ pub fn main(mut gba: agb::Gba) -> ! {
 
                 player.draw(&mut frame);
 
-                enemy.show(&mut frame);
+                enemy0.show(&mut frame);
+                enemy1.show(&mut frame);
+                enemy2.show(&mut frame);
+                enemy3.show(&mut frame);
 
                 button_left.show(&mut frame);
                 button_middle.show(&mut frame);

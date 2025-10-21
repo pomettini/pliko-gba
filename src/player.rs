@@ -31,7 +31,7 @@ impl Default for Player {
 impl Player {
     pub fn new() -> Self {
         let mut player = Object::new(player::IDLE.sprite(0));
-        player.set_pos((50, 60));
+        player.set_pos((55, 86));
         player.set_priority(Priority::P0);
 
         Self {
@@ -56,7 +56,7 @@ impl Player {
             PlayerState::Shield => self.object.set_sprite(player::SHIELD.sprite(0)),
             PlayerState::Jump => self.object.set_sprite(player::JUMP.sprite(0)),
         };
-        self.object.set_pos((50, 60));
+        self.object.set_pos((55, 86));
         self.object.set_priority(Priority::P0);
 
         self.anim_frame += 1;
