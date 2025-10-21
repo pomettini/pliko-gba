@@ -1,6 +1,6 @@
 use agb::{
     display::{
-        GraphicsFrame, Priority,
+        GraphicsFrame,
         object::{Object, Tag},
     },
     include_aseprite, rng,
@@ -9,29 +9,25 @@ use agb::{
 include_aseprite! {
     mod blue,
     "gfx/backgrounds-blue.aseprite",
-    // "gfx/background-blue-full.aseprite"
 }
 
 include_aseprite! {
     mod red,
     "gfx/backgrounds-red.aseprite",
-    // "gfx/background-red-full.aseprite"
 }
 
 include_aseprite! {
     mod green,
     "gfx/backgrounds-green.aseprite",
-    // "gfx/background-green-full.aseprite"
 }
 
 enum ScenarioSize {
     Small,
     Medium,
     Big,
-    // Full,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub enum ScenarioType {
     Water,
     Volcano,
@@ -44,19 +40,16 @@ const fn get_object(s_size: &ScenarioSize, s_type: &ScenarioType) -> &'static Ta
             ScenarioSize::Small => &blue::SMALL,
             ScenarioSize::Medium => &blue::MEDIUM,
             ScenarioSize::Big => &blue::BIG,
-            // ScenarioSize::Full => &blue::FULL,
         },
         ScenarioType::Volcano => match s_size {
             ScenarioSize::Small => &red::SMALL,
             ScenarioSize::Medium => &red::MEDIUM,
             ScenarioSize::Big => &red::BIG,
-            // ScenarioSize::Full => &red::FULL,
         },
         ScenarioType::Swamp => match s_size {
             ScenarioSize::Small => &green::SMALL,
             ScenarioSize::Medium => &green::MEDIUM,
             ScenarioSize::Big => &green::BIG,
-            // ScenarioSize::Full => &green::FULL,
         },
     }
 }
@@ -66,7 +59,6 @@ pub struct Scenario {
     small_sprite: [Object; 3],
     medium_sprite: [Object; 4],
     big_sprite: [Object; 4],
-    // full_sprite: [Object; 6],
 }
 
 impl Scenario {
@@ -95,16 +87,6 @@ impl Scenario {
                 Object::new(blue::BIG.sprite(2)),
                 Object::new(blue::BIG.sprite(3)),
             ],
-            /*
-            full_sprite: [
-                Object::new(blue::FULL.sprite(0)),
-                Object::new(blue::FULL.sprite(1)),
-                Object::new(blue::FULL.sprite(2)),
-                Object::new(blue::FULL.sprite(3)),
-                Object::new(blue::FULL.sprite(4)),
-                Object::new(blue::FULL.sprite(5)),
-            ],
-            */
         }
     }
 
@@ -121,6 +103,8 @@ impl Scenario {
             scenarios[rng::next_i32() as usize % 3],
             scenarios[rng::next_i32() as usize % 3],
         ];
+
+        self.update();
     }
 
     pub fn next(&mut self) {
@@ -132,9 +116,11 @@ impl Scenario {
 
         self.state.rotate_right(1);
         self.state[0] = scenarios[rng::next_i32() as usize % 3];
+
+        self.update();
     }
 
-    pub fn assign(&mut self) {
+    fn update(&mut self) {
         let small = get_object(&ScenarioSize::Small, &self.state[0]);
 
         self.small_sprite[0].set_sprite(small.sprite(0));
@@ -168,30 +154,6 @@ impl Scenario {
         self.big_sprite[1].set_pos((56 + 32, 24));
         self.big_sprite[2].set_pos((56 + 64, 24));
         self.big_sprite[3].set_pos((56 + 96, 24));
-
-        /*
-        let full = get_object(&ScenarioSize::Full, &self.state[3]);
-
-        self.full_sprite[0].set_sprite(full.sprite(0));
-        self.full_sprite[1].set_sprite(full.sprite(1));
-        self.full_sprite[2].set_sprite(full.sprite(2));
-        self.full_sprite[3].set_sprite(full.sprite(3));
-        self.full_sprite[4].set_sprite(full.sprite(4));
-        self.full_sprite[5].set_sprite(full.sprite(5));
-
-        self.full_sprite[0].set_pos((40, 32));
-        self.full_sprite[0].set_priority(Priority::P1);
-        self.full_sprite[1].set_pos((40 + 64, 32));
-        self.full_sprite[1].set_priority(Priority::P1);
-        self.full_sprite[2].set_pos((40 + 128, 32));
-        self.full_sprite[2].set_priority(Priority::P1);
-        self.full_sprite[3].set_pos((40, 32 + 64));
-        self.full_sprite[3].set_priority(Priority::P1);
-        self.full_sprite[4].set_pos((40 + 64, 32 + 64));
-        self.full_sprite[4].set_priority(Priority::P1);
-        self.full_sprite[5].set_pos((40 + 128, 32 + 64));
-        self.full_sprite[5].set_priority(Priority::P1);
-        */
     }
 
     pub fn draw(&mut self, frame: &mut GraphicsFrame<'_>) {
@@ -206,11 +168,5 @@ impl Scenario {
         for sprite in &self.big_sprite {
             sprite.show(frame);
         }
-
-        /*
-        for sprite in &self.full_sprite {
-            sprite.show(frame);
-        }
-        */
     }
 }
