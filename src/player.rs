@@ -22,12 +22,6 @@ pub struct Player {
     anim_frame: usize,
 }
 
-impl Default for Player {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl Player {
     pub fn new() -> Self {
         let mut player = Object::new(player::IDLE.sprite(0));

@@ -5,6 +5,7 @@ use crate::player::Player;
 use crate::scenario::Scenario;
 
 pub enum GameState {
+    Title,
     Game,
     GameOver,
 }
