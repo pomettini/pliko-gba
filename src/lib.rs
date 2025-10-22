@@ -22,13 +22,11 @@ use alloc::vec::Vec;
 
 use crate::enemy::{Enemy, setup_enemies};
 use crate::game_over::show_game_over_screen;
-use crate::gamestate::{Game, GameState};
 use crate::scenario::{Scenario, ScenarioType};
 use crate::title_screen::show_title_screen;
 
 pub mod enemy;
 pub mod game_over;
-pub mod gamestate;
 pub mod player;
 pub mod scenario;
 pub mod title_screen;
@@ -58,7 +56,12 @@ pub fn update_full_background(scenario: &Scenario, background: &mut RegularBackg
         ScenarioType::Volcano => &background::RED,
         ScenarioType::Swamp => &background::GREEN,
     };
-    background.fill_with(&bg);
+    background.fill_with(bg);
+}
+
+pub fn do_action(scenario: &mut Scenario, action: ActionType, player: &mut Player) {
+    player.perform_action(action);
+    scenario.next();
 }
 
 pub fn main(mut gba: agb::Gba) -> ! {
@@ -128,7 +131,7 @@ pub fn main(mut gba: agb::Gba) -> ! {
             TileFormat::FourBpp,
         );
 
-        // game_bg.fill_with(&background::GAME);
+        game_bg.fill_with(&background::GAME);
 
         let mut full_bg = RegularBackground::new(
             Priority::P1,
@@ -136,74 +139,80 @@ pub fn main(mut gba: agb::Gba) -> ! {
             TileFormat::FourBpp,
         );
 
-        let mut game = Game::new();
-        update_full_background(&game.scenario, &mut full_bg);
+        let mut scenario = Scenario::new();
+        scenario.randomize();
+
+        update_full_background(&scenario, &mut full_bg);
 
         loop {
-            let mut frame = gfx.frame();
+            loop {
+                let mut frame = gfx.frame();
 
-            game_bg.show(&mut frame);
-            full_bg.show(&mut frame);
+                game_bg.show(&mut frame);
+                full_bg.show(&mut frame);
 
-            game.draw(&mut frame);
+                scenario.draw(&mut frame);
 
-            if counter > 6 {
-                player.update();
-                enemies[3].update();
-                counter = 0;
-            }
-
-            player.draw(&mut frame);
-
-            for enemy in &mut enemies {
-                enemy.draw(&mut frame);
-            }
-
-            button_left.show(&mut frame);
-            button_middle.show(&mut frame);
-            button_right.show(&mut frame);
-
-            mixer.frame();
-            input.update();
-            frame.commit();
-
-            // println!("{:?}", game.scenario.state);
-
-            if input.is_just_pressed(Button::L) {
-                if game.scenario.state[3] != ScenarioType::Water {
-                    break;
+                if counter > 6 {
+                    player.update();
+                    enemies[3].update();
+                    counter = 0;
                 }
 
-                game.do_action(ActionType::Attack, &mut player);
-                update_full_background(&game.scenario, &mut full_bg);
-            }
+                player.draw(&mut frame);
 
-            if input.is_just_pressed(Button::B) || input.is_just_pressed(Button::A) {
-                if game.scenario.state[3] != ScenarioType::Swamp {
-                    break;
+                for enemy in &mut enemies {
+                    enemy.draw(&mut frame);
                 }
 
-                game.do_action(ActionType::Shield, &mut player);
-                update_full_background(&game.scenario, &mut full_bg);
-            }
+                button_left.show(&mut frame);
+                button_middle.show(&mut frame);
+                button_right.show(&mut frame);
 
-            if input.is_just_pressed(Button::R) {
-                if game.scenario.state[3] != ScenarioType::Volcano {
-                    break;
+                mixer.frame();
+                input.update();
+                frame.commit();
+
+                // println!("{:?}", game.scenario.state);
+
+                if input.is_just_pressed(Button::L) {
+                    if scenario.state[3] != ScenarioType::Water {
+                        break;
+                    }
+
+                    do_action(&mut scenario, ActionType::Attack, &mut player);
+                    update_full_background(&scenario, &mut full_bg);
                 }
 
-                game.do_action(ActionType::Jump, &mut player);
-                update_full_background(&game.scenario, &mut full_bg);
+                if input.is_just_pressed(Button::B) || input.is_just_pressed(Button::A) {
+                    if scenario.state[3] != ScenarioType::Swamp {
+                        break;
+                    }
+
+                    do_action(&mut scenario, ActionType::Shield, &mut player);
+                    update_full_background(&scenario, &mut full_bg);
+                }
+
+                if input.is_just_pressed(Button::R) {
+                    if scenario.state[3] != ScenarioType::Volcano {
+                        break;
+                    }
+
+                    do_action(&mut scenario, ActionType::Jump, &mut player);
+                    update_full_background(&scenario, &mut full_bg);
+                }
+
+                counter += 1;
             }
 
-            counter += 1;
+            show_game_over_screen(&mut gfx);
+
+            VRAM_MANAGER.set_background_palettes(background::PALETTES);
         }
 
         /*
         let frame = gfx.frame();
         frame.commit();
         */
-
-        show_game_over_screen(&mut gfx);
     }
 }
