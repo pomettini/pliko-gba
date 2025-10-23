@@ -67,27 +67,6 @@ pub fn do_action(scenario: &mut Scenario, action: ActionType, player: &mut Playe
 pub fn main(mut gba: agb::Gba) -> ! {
     let mut counter = 0;
 
-    static PALETTE: &Palette16 = const {
-        let mut palette = [Rgb15::BLACK; 16];
-        palette[1] = Rgb15::WHITE;
-        palette[2] = Rgb15(0x10_7C);
-        &Palette16::new(palette)
-    };
-
-    static FONT: Font = include_font!("gfx/pixelated.ttf", 10);
-
-    let layout = Layout::new(
-        "Game over!\nPress Start to restart",
-        &FONT,
-        AlignmentKind::Left,
-        16,
-        200,
-    );
-
-    let text_render = ObjectTextRenderer::new(PALETTE.into(), Size::S16x16);
-
-    let objects: Vec<_> = layout.map(|x| text_render.show(&x, vec2(16, 16))).collect();
-
     // VRAM_MANAGER.set_background_palettes(background::PALETTES);
 
     let mut player = Player::new();
