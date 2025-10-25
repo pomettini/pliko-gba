@@ -22,6 +22,8 @@ pub fn show_title_screen(gfx: &mut Graphics, sfx: &mut Sfx) {
         TileFormat::FourBpp,
     );
 
+    sfx.play_title_theme();
+
     let mut input = ButtonController::new();
 
     map.fill_with(&title_screen::TITLE_SCREEN);

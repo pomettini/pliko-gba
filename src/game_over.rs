@@ -7,17 +7,21 @@ use agb::{
     input::{Button, ButtonController},
 };
 
+use crate::sfx_manager::Sfx;
+
 include_background_gfx!(
     mod game_over_screen,
     GAME_OVER => deduplicate "gfx/game-over.png",
 );
 
-pub fn show_game_over_screen(gfx: &mut Graphics) {
+pub fn show_game_over_screen(gfx: &mut Graphics, sfx: &mut Sfx) {
     let mut map = RegularBackground::new(
         Priority::P3,
         RegularBackgroundSize::Background32x32,
         TileFormat::FourBpp,
     );
+
+    sfx.stop();
 
     let mut input = ButtonController::new();
 
@@ -29,6 +33,7 @@ pub fn show_game_over_screen(gfx: &mut Graphics) {
         let mut frame = gfx.frame();
         map.show(&mut frame);
 
+        sfx.frame();
         input.update();
 
         if input.is_just_pressed(Button::START) {

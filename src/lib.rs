@@ -94,15 +94,14 @@ pub fn main(mut gba: agb::Gba) -> ! {
     let mut game_music = SoundChannel::new_high_priority(GAME_MUSIC);
     game_music.should_loop();
 
-    let mut sfx_manager = Sfx::create(gba.mixer.mixer(Frequency::Hz18157));
-    sfx_manager.play_title_theme();
+    let mut sfx = Sfx::create(gba.mixer.mixer(Frequency::Hz18157));
 
     let mut gfx = gba.graphics.get();
 
-    show_title_screen(&mut gfx, &mut sfx_manager);
+    show_title_screen(&mut gfx, &mut sfx);
 
-    sfx_manager.stop();
-    sfx_manager.play_game_theme();
+    sfx.stop();
+    sfx.play_game_theme();
 
     /*
     let frame = gfx.frame();
@@ -158,7 +157,7 @@ pub fn main(mut gba: agb::Gba) -> ! {
                 button_middle.show(&mut frame);
                 button_right.show(&mut frame);
 
-                sfx_manager.frame();
+                sfx.frame();
                 input.update();
                 frame.commit();
 
@@ -194,14 +193,11 @@ pub fn main(mut gba: agb::Gba) -> ! {
                 counter += 1;
             }
 
-            show_game_over_screen(&mut gfx);
+            show_game_over_screen(&mut gfx, &mut sfx);
+
+            sfx.play_game_theme();
 
             VRAM_MANAGER.set_background_palettes(background::PALETTES);
         }
-
-        /*
-        let frame = gfx.frame();
-        frame.commit();
-        */
     }
 }
