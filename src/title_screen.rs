@@ -5,7 +5,6 @@ use agb::{
     },
     include_background_gfx,
     input::{Button, ButtonController},
-    sound::mixer::Mixer,
 };
 
 use crate::sfx_manager::Sfx;

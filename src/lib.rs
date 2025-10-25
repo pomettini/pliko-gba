@@ -4,25 +4,17 @@
 #![cfg_attr(test, reexport_test_harness_main = "test_main")]
 #![cfg_attr(test, test_runner(agb::test_runner::test_runner))]
 
-use core::mem;
-
-use agb::display::font::{AlignmentKind, Font, Layout, ObjectTextRenderer};
-use agb::display::object::{Object, Size};
+use agb::display::Priority;
+use agb::display::object::Object;
 use agb::display::tiled::{RegularBackground, RegularBackgroundSize, TileFormat, VRAM_MANAGER};
-use agb::display::{Palette16, Priority, Rgb15};
-use agb::fixnum::vec2;
 use agb::input::{Button, ButtonController};
 use agb::sound::mixer::{Frequency, SoundChannel, SoundData};
-use agb::{
-    include_aseprite, include_aseprite_256, include_background_gfx, include_font, include_wav,
-    println,
-};
+use agb::{include_aseprite, include_background_gfx, include_wav};
 use player::*;
 
 extern crate alloc;
-use alloc::vec::Vec;
 
-use crate::enemy::{Enemy, setup_enemies};
+use crate::enemy::setup_enemies;
 use crate::game_over::show_game_over_screen;
 use crate::scenario::{Scenario, ScenarioType};
 use crate::sfx_manager::Sfx;
@@ -71,8 +63,6 @@ pub fn do_action(scenario: &mut Scenario, action: ActionType, player: &mut Playe
 pub fn main(mut gba: agb::Gba) -> ! {
     let mut counter = 0;
 
-    // VRAM_MANAGER.set_background_palettes(background::PALETTES);
-
     let mut player = Player::new();
     let mut enemies = setup_enemies();
 
@@ -103,15 +93,8 @@ pub fn main(mut gba: agb::Gba) -> ! {
     sfx.stop();
     sfx.play_game_theme();
 
-    /*
-    let frame = gfx.frame();
-    frame.commit();
-    */
-
     loop {
         let mut input = ButtonController::new();
-
-        VRAM_MANAGER.set_background_palettes(background::PALETTES);
 
         let mut game_bg = RegularBackground::new(
             Priority::P3,
@@ -131,6 +114,8 @@ pub fn main(mut gba: agb::Gba) -> ! {
         scenario.randomize();
 
         update_full_background(&scenario, &mut full_bg);
+
+        VRAM_MANAGER.set_background_palettes(background::PALETTES);
 
         loop {
             loop {
@@ -160,8 +145,6 @@ pub fn main(mut gba: agb::Gba) -> ! {
                 sfx.frame();
                 input.update();
                 frame.commit();
-
-                // println!("{:?}", game.scenario.state);
 
                 if input.is_just_pressed(Button::L) {
                     if scenario.state[3] != ScenarioType::Water {
