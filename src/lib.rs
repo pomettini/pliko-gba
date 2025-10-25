@@ -4,12 +4,15 @@
 #![cfg_attr(test, reexport_test_harness_main = "test_main")]
 #![cfg_attr(test, test_runner(agb::test_runner::test_runner))]
 
-use agb::display::Priority;
-use agb::display::object::Object;
+use agb::display::font::{AlignmentKind, Font, Layout, ObjectTextRenderer};
+use agb::display::object::{Object, Size};
 use agb::display::tiled::{RegularBackground, RegularBackgroundSize, TileFormat, VRAM_MANAGER};
+use agb::display::{Palette16, Priority, Rgb15};
 use agb::input::{Button, ButtonController};
 use agb::sound::mixer::{Frequency, SoundChannel, SoundData};
-use agb::{include_aseprite, include_background_gfx, include_wav};
+use agb::{fixnum, include_aseprite, include_background_gfx, include_font, include_wav};
+use alloc::vec::Vec;
+use fixnum::vec2;
 use player::*;
 
 extern crate alloc;
@@ -26,6 +29,15 @@ pub mod player;
 pub mod scenario;
 pub mod sfx_manager;
 pub mod title_screen;
+
+static PALETTE: &Palette16 = const {
+    let mut palette = [Rgb15::BLACK; 16];
+    palette[1] = Rgb15::WHITE;
+    palette[2] = Rgb15(0x10_7C);
+    &Palette16::new(palette)
+};
+
+static FONT: Font = include_font!("gfx/ark-pixel-10px-proportional.ttf", 10);
 
 include_background_gfx!(
     mod background,
@@ -88,6 +100,20 @@ pub fn main(mut gba: agb::Gba) -> ! {
 
     let mut gfx = gba.graphics.get();
 
+    let score_layout = Layout::new("Score: 0", &FONT, AlignmentKind::Left, 16, 80);
+    let score_text_render = ObjectTextRenderer::new(PALETTE.into(), Size::S16x16);
+
+    let score_objects: Vec<_> = score_layout
+        .map(|x| score_text_render.show(&x, vec2(8, 3)))
+        .collect();
+
+    let time_layout = Layout::new("Time: 60", &FONT, AlignmentKind::Right, 16, 232);
+    let time_text_render = ObjectTextRenderer::new(PALETTE.into(), Size::S16x16);
+
+    let time_objects: Vec<_> = time_layout
+        .map(|x| time_text_render.show(&x, vec2(0, 3)))
+        .collect();
+
     show_title_screen(&mut gfx, &mut sfx);
 
     sfx.stop();
@@ -141,6 +167,14 @@ pub fn main(mut gba: agb::Gba) -> ! {
                 full_bg.show(&mut frame);
 
                 scenario.draw(&mut frame);
+
+                for object in score_objects.iter() {
+                    object.show(&mut frame);
+                }
+
+                for object in time_objects.iter() {
+                    object.show(&mut frame);
+                }
 
                 sfx.frame();
                 input.update();
