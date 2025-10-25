@@ -5,14 +5,17 @@ use agb::{
     },
     include_background_gfx,
     input::{Button, ButtonController},
+    sound::mixer::Mixer,
 };
+
+use crate::sfx_manager::Sfx;
 
 include_background_gfx!(
     mod title_screen,
     TITLE_SCREEN => deduplicate "gfx/title-screen.png",
 );
 
-pub fn show_title_screen(gfx: &mut Graphics) {
+pub fn show_title_screen(gfx: &mut Graphics, sfx: &mut Sfx) {
     let mut map = RegularBackground::new(
         Priority::P3,
         RegularBackgroundSize::Background32x32,
@@ -29,6 +32,7 @@ pub fn show_title_screen(gfx: &mut Graphics) {
         let mut frame = gfx.frame();
         map.show(&mut frame);
 
+        sfx.frame();
         input.update();
 
         if input.is_just_pressed(Button::START) {

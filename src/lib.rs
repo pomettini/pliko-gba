@@ -4,6 +4,8 @@
 #![cfg_attr(test, reexport_test_harness_main = "test_main")]
 #![cfg_attr(test, test_runner(agb::test_runner::test_runner))]
 
+use core::mem;
+
 use agb::display::font::{AlignmentKind, Font, Layout, ObjectTextRenderer};
 use agb::display::object::{Object, Size};
 use agb::display::tiled::{RegularBackground, RegularBackgroundSize, TileFormat, VRAM_MANAGER};
@@ -23,12 +25,14 @@ use alloc::vec::Vec;
 use crate::enemy::{Enemy, setup_enemies};
 use crate::game_over::show_game_over_screen;
 use crate::scenario::{Scenario, ScenarioType};
+use crate::sfx_manager::Sfx;
 use crate::title_screen::show_title_screen;
 
 pub mod enemy;
 pub mod game_over;
 pub mod player;
 pub mod scenario;
+pub mod sfx_manager;
 pub mod title_screen;
 
 include_background_gfx!(
@@ -81,18 +85,24 @@ pub fn main(mut gba: agb::Gba) -> ! {
     let mut button_right = Object::new(buttons::RED.sprite(0));
     button_right.set_pos((132 - 8, 135 - 7));
 
-    static BACKGROUND_MUSIC: SoundData = include_wav!("sfx/game_loop.wav");
+    static TITLE_MUSIC: SoundData = include_wav!("sfx/title_loop.wav");
+    static GAME_MUSIC: SoundData = include_wav!("sfx/game_loop.wav");
 
-    let mut mixer = gba.mixer.mixer(Frequency::Hz18157);
+    let mut title_music = SoundChannel::new_high_priority(TITLE_MUSIC);
+    title_music.should_loop();
 
-    let mut background_music = SoundChannel::new(BACKGROUND_MUSIC);
-    background_music.stereo();
+    let mut game_music = SoundChannel::new_high_priority(GAME_MUSIC);
+    game_music.should_loop();
 
-    mixer.play_sound(background_music);
+    let mut sfx_manager = Sfx::create(gba.mixer.mixer(Frequency::Hz18157));
+    sfx_manager.play_title_theme();
 
     let mut gfx = gba.graphics.get();
 
-    show_title_screen(&mut gfx);
+    show_title_screen(&mut gfx, &mut sfx_manager);
+
+    sfx_manager.stop();
+    sfx_manager.play_game_theme();
 
     /*
     let frame = gfx.frame();
@@ -148,7 +158,7 @@ pub fn main(mut gba: agb::Gba) -> ! {
                 button_middle.show(&mut frame);
                 button_right.show(&mut frame);
 
-                mixer.frame();
+                sfx_manager.frame();
                 input.update();
                 frame.commit();
 
