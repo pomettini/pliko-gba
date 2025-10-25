@@ -30,15 +30,15 @@ pub fn show_game_over_screen(gfx: &mut Graphics, sfx: &mut Sfx) {
     VRAM_MANAGER.set_background_palettes(game_over_screen::PALETTES);
 
     loop {
-        let mut frame = gfx.frame();
-        map.show(&mut frame);
-
         sfx.frame();
         input.update();
 
         if input.is_just_pressed(Button::START) {
             break;
         }
+
+        let mut frame = gfx.frame();
+        map.show(&mut frame);
 
         frame.commit();
     }

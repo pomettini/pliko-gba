@@ -115,22 +115,17 @@ pub fn main(mut gba: agb::Gba) -> ! {
 
         update_full_background(&scenario, &mut full_bg);
 
-        VRAM_MANAGER.set_background_palettes(background::PALETTES);
-
         loop {
+            VRAM_MANAGER.set_background_palettes(background::PALETTES);
+
             loop {
-                let mut frame = gfx.frame();
-
-                game_bg.show(&mut frame);
-                full_bg.show(&mut frame);
-
-                scenario.draw(&mut frame);
-
                 if counter > 6 {
                     player.update();
                     enemies[3].update();
                     counter = 0;
                 }
+
+                let mut frame = gfx.frame();
 
                 player.draw(&mut frame);
 
@@ -141,6 +136,11 @@ pub fn main(mut gba: agb::Gba) -> ! {
                 button_left.show(&mut frame);
                 button_middle.show(&mut frame);
                 button_right.show(&mut frame);
+
+                game_bg.show(&mut frame);
+                full_bg.show(&mut frame);
+
+                scenario.draw(&mut frame);
 
                 sfx.frame();
                 input.update();
@@ -179,8 +179,6 @@ pub fn main(mut gba: agb::Gba) -> ! {
             show_game_over_screen(&mut gfx, &mut sfx);
 
             sfx.play_game_theme();
-
-            VRAM_MANAGER.set_background_palettes(background::PALETTES);
         }
     }
 }
