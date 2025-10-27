@@ -87,7 +87,6 @@ pub fn main(mut gba: agb::Gba) -> ! {
     let mut t2 = timers.timer2;
     let mut t3 = timers.timer3;
 
-    // Timer2: base 16.78 MHz / 1024 ≈ 16384 Hz
     t2.set_divider(Divider::Divider1024).set_enabled(true);
     t3.set_cascade(true).set_enabled(true);
 
@@ -155,6 +154,10 @@ pub fn main(mut gba: agb::Gba) -> ! {
             loop {
                 vblank.wait_for_vblank();
 
+                for _ in 0..200 {
+                    sfx.frame();
+                }
+
                 let low = t2.value() as u32;
                 let high = t3.value() as u32;
                 let ticks = (high << 16) | low;
@@ -169,7 +172,6 @@ pub fn main(mut gba: agb::Gba) -> ! {
                         ACC -= 16384;
                         if seconds_left > 0 {
                             seconds_left -= 1;
-                            agb::println!("Seconds left: {seconds_left}");
                         }
                     }
                 }
@@ -224,7 +226,7 @@ pub fn main(mut gba: agb::Gba) -> ! {
                     object.show(&mut frame);
                 }
 
-                sfx.frame();
+                // sfx.frame();
                 input.update();
                 frame.commit();
 
