@@ -9,8 +9,14 @@ use agb::display::object::{Object, Size};
 use agb::display::tiled::{RegularBackground, RegularBackgroundSize, TileFormat, VRAM_MANAGER};
 use agb::display::{Palette16, Priority, Rgb15};
 use agb::input::{Button, ButtonController};
+use agb::interrupt::VBlank;
 use agb::sound::mixer::{Frequency, SoundChannel, SoundData};
-use agb::{fixnum, include_aseprite, include_background_gfx, include_font, include_wav};
+use agb::timer::{Divider, Timer};
+use agb::{
+    Gba, fixnum, include_aseprite, include_background_gfx, include_font, include_wav, println,
+};
+use alloc::format;
+use alloc::string::String;
 use alloc::vec::Vec;
 use fixnum::vec2;
 use player::*;
@@ -75,6 +81,19 @@ pub fn do_action(scenario: &mut Scenario, action: ActionType, player: &mut Playe
 pub fn main(mut gba: agb::Gba) -> ! {
     let mut counter = 0;
 
+    let vblank = VBlank::get();
+
+    let timers = gba.timers.timers();
+    let mut t2 = timers.timer2;
+    let mut t3 = timers.timer3;
+
+    // Timer2: base 16.78 MHz / 1024 ≈ 16384 Hz
+    t2.set_divider(Divider::Divider1024).set_enabled(true);
+    t3.set_cascade(true).set_enabled(true);
+
+    let mut last_ticks: u32 = 0;
+    let mut seconds_left: i32 = 60;
+
     let mut player = Player::new();
     let mut enemies = setup_enemies();
 
@@ -100,19 +119,8 @@ pub fn main(mut gba: agb::Gba) -> ! {
 
     let mut gfx = gba.graphics.get();
 
-    let score_layout = Layout::new("Score: 0", &FONT, AlignmentKind::Left, 16, 80);
     let score_text_render = ObjectTextRenderer::new(PALETTE.into(), Size::S16x16);
-
-    let score_objects: Vec<_> = score_layout
-        .map(|x| score_text_render.show(&x, vec2(8, 3)))
-        .collect();
-
-    let time_layout = Layout::new("Time: 60", &FONT, AlignmentKind::Right, 16, 232);
     let time_text_render = ObjectTextRenderer::new(PALETTE.into(), Size::S16x16);
-
-    let time_objects: Vec<_> = time_layout
-        .map(|x| time_text_render.show(&x, vec2(0, 3)))
-        .collect();
 
     show_title_screen(&mut gfx, &mut sfx);
 
@@ -145,11 +153,51 @@ pub fn main(mut gba: agb::Gba) -> ! {
             VRAM_MANAGER.set_background_palettes(background::PALETTES);
 
             loop {
+                vblank.wait_for_vblank();
+
+                let low = t2.value() as u32;
+                let high = t3.value() as u32;
+                let ticks = (high << 16) | low;
+
+                let delta = ticks.wrapping_sub(last_ticks);
+                last_ticks = ticks;
+
+                static mut ACC: u32 = 0;
+                unsafe {
+                    ACC += delta;
+                    if ACC >= 16384 {
+                        ACC -= 16384;
+                        if seconds_left > 0 {
+                            seconds_left -= 1;
+                            agb::println!("Seconds left: {seconds_left}");
+                        }
+                    }
+                }
+
                 if counter > 6 {
                     player.update();
                     enemies[3].update();
                     counter = 0;
                 }
+
+                let score_layout =
+                    Layout::new(&format!("Score: 0"), &FONT, AlignmentKind::Left, 16, 80);
+
+                let score_objects: Vec<_> = score_layout
+                    .map(|x| score_text_render.show(&x, vec2(8, 3)))
+                    .collect();
+
+                let time_layout = Layout::new(
+                    &format!("Time: {seconds_left}"),
+                    &FONT,
+                    AlignmentKind::Right,
+                    16,
+                    232,
+                );
+
+                let time_objects: Vec<_> = time_layout
+                    .map(|x| time_text_render.show(&x, vec2(0, 3)))
+                    .collect();
 
                 let mut frame = gfx.frame();
 
