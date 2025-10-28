@@ -16,7 +16,6 @@ use agb::{
     Gba, fixnum, include_aseprite, include_background_gfx, include_font, include_wav, println,
 };
 use alloc::format;
-use alloc::string::String;
 use alloc::vec::Vec;
 use fixnum::vec2;
 use player::*;
@@ -73,6 +72,20 @@ pub fn update_full_background(scenario: &Scenario, background: &mut RegularBackg
     background.fill_with(bg);
 }
 
+pub fn check_game_over(
+    scenario: &Scenario,
+    scenario_type: ScenarioType,
+    player: &mut Player,
+) -> bool {
+    let wrong_action = scenario.state[3] != scenario_type;
+
+    if wrong_action {
+        player.kill();
+    }
+
+    return wrong_action;
+}
+
 pub fn do_action(scenario: &mut Scenario, action: ActionType, player: &mut Player) {
     player.perform_action(action);
     scenario.next();
@@ -80,18 +93,6 @@ pub fn do_action(scenario: &mut Scenario, action: ActionType, player: &mut Playe
 
 pub fn main(mut gba: agb::Gba) -> ! {
     let mut counter = 0;
-
-    let vblank = VBlank::get();
-
-    let timers = gba.timers.timers();
-    let mut t2 = timers.timer2;
-    let mut t3 = timers.timer3;
-
-    t2.set_divider(Divider::Divider1024).set_enabled(true);
-    t3.set_cascade(true).set_enabled(true);
-
-    let mut last_ticks: u32 = 0;
-    let mut seconds_left: i32 = 60;
 
     let mut player = Player::new();
     let mut enemies = setup_enemies();
@@ -126,7 +127,20 @@ pub fn main(mut gba: agb::Gba) -> ! {
     sfx.stop();
     sfx.play_game_theme();
 
+    // Game setup
     loop {
+        let vblank = VBlank::get();
+
+        let timers = gba.timers.timers();
+        let mut t2 = timers.timer2;
+        let mut t3 = timers.timer3;
+
+        t2.set_divider(Divider::Divider1024).set_enabled(true);
+        t3.set_cascade(true).set_enabled(true);
+
+        let mut last_ticks: u32 = 0;
+        let mut seconds_left: i32 = 60;
+
         let mut input = ButtonController::new();
 
         let mut game_bg = RegularBackground::new(
@@ -148,9 +162,13 @@ pub fn main(mut gba: agb::Gba) -> ! {
 
         update_full_background(&scenario, &mut full_bg);
 
+        // Game restart
         loop {
             VRAM_MANAGER.set_background_palettes(background::PALETTES);
 
+            player.state = PlayerState::Idle;
+
+            // Game update
             loop {
                 vblank.wait_for_vblank();
 
@@ -176,8 +194,8 @@ pub fn main(mut gba: agb::Gba) -> ! {
                     }
                 }
 
+                player.update();
                 if counter > 6 {
-                    player.update();
                     enemies[3].update();
                     counter = 0;
                 }
@@ -231,30 +249,28 @@ pub fn main(mut gba: agb::Gba) -> ! {
                 frame.commit();
 
                 if input.is_just_pressed(Button::L) {
-                    if scenario.state[3] != ScenarioType::Water {
-                        break;
+                    if !check_game_over(&scenario, ScenarioType::Water, &mut player) {
+                        do_action(&mut scenario, ActionType::Attack, &mut player);
+                        update_full_background(&scenario, &mut full_bg);
                     }
-
-                    do_action(&mut scenario, ActionType::Attack, &mut player);
-                    update_full_background(&scenario, &mut full_bg);
                 }
 
                 if input.is_just_pressed(Button::B) || input.is_just_pressed(Button::A) {
-                    if scenario.state[3] != ScenarioType::Swamp {
-                        break;
+                    if !check_game_over(&scenario, ScenarioType::Swamp, &mut player) {
+                        do_action(&mut scenario, ActionType::Shield, &mut player);
+                        update_full_background(&scenario, &mut full_bg);
                     }
-
-                    do_action(&mut scenario, ActionType::Shield, &mut player);
-                    update_full_background(&scenario, &mut full_bg);
                 }
 
                 if input.is_just_pressed(Button::R) {
-                    if scenario.state[3] != ScenarioType::Volcano {
-                        break;
+                    if !check_game_over(&scenario, ScenarioType::Volcano, &mut player) {
+                        do_action(&mut scenario, ActionType::Jump, &mut player);
+                        update_full_background(&scenario, &mut full_bg);
                     }
+                }
 
-                    do_action(&mut scenario, ActionType::Jump, &mut player);
-                    update_full_background(&scenario, &mut full_bg);
+                if player.is_dead() {
+                    break;
                 }
 
                 counter += 1;

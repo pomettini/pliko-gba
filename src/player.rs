@@ -1,6 +1,8 @@
-use agb::display::object::Object;
-use agb::display::{GraphicsFrame, Priority};
-use agb::include_aseprite;
+use agb::display::object::{AffineMode, Object, ObjectAffine, SpriteVram};
+use agb::display::{AffineMatrix, GraphicsFrame, Priority};
+use agb::fixnum::{Num, Vector2D, num, vec2};
+use agb::{include_aseprite, println};
+use alloc::vec;
 
 use crate::ActionType;
 
@@ -9,33 +11,45 @@ include_aseprite! {
     "gfx/player.aseprite"
 }
 
-enum PlayerState {
+#[derive(PartialEq)]
+pub enum PlayerState {
     Idle,
     Attack,
     Shield,
     Jump,
+    Dead,
 }
 
 pub struct Player {
-    object: Object,
-    state: PlayerState,
+    counter: Num<i32, 8>,
+    sprite: SpriteVram,
+    // object: Object,
+    pub state: PlayerState,
+    accumulator: usize,
     anim_frame: usize,
 }
 
 impl Player {
     pub fn new() -> Self {
-        let mut player = Object::new(player::IDLE.sprite(0));
+        let mut sprite: SpriteVram = player::DEATH.sprite(0).into();
+        /*
+        let mut player = Object::new(sprite.clone());
         player.set_pos((55, 86));
         player.set_priority(Priority::P0);
+        */
 
         Self {
-            object: player,
+            counter: num!(0.0),
+            sprite: sprite,
+            // object: player,
             state: PlayerState::Idle,
+            accumulator: 0,
             anim_frame: 0,
         }
     }
 
     pub fn perform_action(&mut self, action: ActionType) {
+        self.accumulator = 0;
         self.state = match action {
             ActionType::Attack => PlayerState::Attack,
             ActionType::Shield => PlayerState::Shield,
@@ -43,23 +57,69 @@ impl Player {
         }
     }
 
+    pub fn kill(&mut self) {
+        self.state = PlayerState::Dead;
+    }
+
+    pub fn is_dead(&self) -> bool {
+        self.state == PlayerState::Dead
+    }
+
     pub fn update(&mut self) {
-        match self.state {
-            PlayerState::Idle => self.object.set_sprite(player::IDLE.sprite(self.anim_frame)),
-            PlayerState::Attack => self.object.set_sprite(player::ATTACK.sprite(0)),
-            PlayerState::Shield => self.object.set_sprite(player::SHIELD.sprite(0)),
-            PlayerState::Jump => self.object.set_sprite(player::JUMP.sprite(0)),
+        self.sprite = match self.state {
+            PlayerState::Idle => player::IDLE.sprite(self.anim_frame).into(),
+            PlayerState::Attack => player::ATTACK.sprite(0).into(),
+            PlayerState::Shield => player::SHIELD.sprite(0).into(),
+            PlayerState::Jump => player::JUMP.sprite(0).into(),
+            PlayerState::Dead => player::DEATH.sprite(0).into(),
         };
+        /*
         self.object.set_pos((55, 86));
         self.object.set_priority(Priority::P0);
+        */
 
-        self.anim_frame += 1;
-        self.anim_frame %= 2;
+        if self.state == PlayerState::Dead {
+            return;
+        }
 
-        self.state = PlayerState::Idle;
+        if self.accumulator > 6 {
+            self.anim_frame += 1;
+            self.anim_frame %= 2;
+            self.state = PlayerState::Idle;
+            self.accumulator = 0;
+        }
+
+        self.accumulator += 1;
+
+        // self.counter -= num!(0.05);
     }
 
     pub fn draw(&self, frame: &mut GraphicsFrame<'_>) {
-        self.object.show(frame);
+        let test = num!(1.0) + ((self.counter / 10) % num!(0.5));
+        // println!("{test}");
+
+        let position: Vector2D<Num<i32, 8>> = match self.state {
+            PlayerState::Dead => vec2(39.into(), 70.into()),
+            _ => vec2((36).into(), (73).into()),
+        };
+
+        let rot_mat: AffineMatrix = AffineMatrix::from_rotation(self.counter);
+        let scale_mat: AffineMatrix = AffineMatrix::from_scale(vec2(test, test));
+        let pos_mat: AffineMatrix = AffineMatrix::from_translation(position);
+
+        let final_transform: AffineMatrix = pos_mat * rot_mat * scale_mat;
+
+        // let affine_matrix = AffineMatrix::from_rotation(num!(0.25));
+        // let affine_matrix_instance = AffineMatrix::new(affine_matrix);
+
+        ObjectAffine::new(
+            self.sprite.clone(),
+            final_transform.into(),
+            AffineMode::AffineDouble,
+        )
+        .set_pos(final_transform.position().round())
+        .show(frame);
+
+        // self.object.show(frame);
     }
 }
