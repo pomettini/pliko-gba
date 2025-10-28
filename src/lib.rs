@@ -92,8 +92,6 @@ pub fn do_action(scenario: &mut Scenario, action: ActionType, player: &mut Playe
 }
 
 pub fn main(mut gba: agb::Gba) -> ! {
-    let mut counter = 0;
-
     let mut player = Player::new();
     let mut enemies = setup_enemies();
 
@@ -126,6 +124,8 @@ pub fn main(mut gba: agb::Gba) -> ! {
 
     sfx.stop();
     sfx.play_game_theme();
+
+    let mut death_counter = 0;
 
     // Game setup
     loop {
@@ -166,7 +166,8 @@ pub fn main(mut gba: agb::Gba) -> ! {
         loop {
             VRAM_MANAGER.set_background_palettes(background::PALETTES);
 
-            player.state = PlayerState::Idle;
+            death_counter = 0;
+            player.reset();
 
             // Game update
             loop {
@@ -195,10 +196,7 @@ pub fn main(mut gba: agb::Gba) -> ! {
                 }
 
                 player.update();
-                if counter > 6 {
-                    enemies[3].update();
-                    counter = 0;
-                }
+                enemies[3].update();
 
                 let score_layout =
                     Layout::new(&format!("Score: 0"), &FONT, AlignmentKind::Left, 16, 80);
@@ -248,32 +246,35 @@ pub fn main(mut gba: agb::Gba) -> ! {
                 input.update();
                 frame.commit();
 
-                if input.is_just_pressed(Button::L) {
-                    if !check_game_over(&scenario, ScenarioType::Water, &mut player) {
-                        do_action(&mut scenario, ActionType::Attack, &mut player);
-                        update_full_background(&scenario, &mut full_bg);
+                if !player.is_dead() {
+                    if input.is_just_pressed(Button::L) {
+                        if !check_game_over(&scenario, ScenarioType::Water, &mut player) {
+                            do_action(&mut scenario, ActionType::Attack, &mut player);
+                            update_full_background(&scenario, &mut full_bg);
+                        }
                     }
-                }
 
-                if input.is_just_pressed(Button::B) || input.is_just_pressed(Button::A) {
-                    if !check_game_over(&scenario, ScenarioType::Swamp, &mut player) {
-                        do_action(&mut scenario, ActionType::Shield, &mut player);
-                        update_full_background(&scenario, &mut full_bg);
+                    if input.is_just_pressed(Button::B) || input.is_just_pressed(Button::A) {
+                        if !check_game_over(&scenario, ScenarioType::Swamp, &mut player) {
+                            do_action(&mut scenario, ActionType::Shield, &mut player);
+                            update_full_background(&scenario, &mut full_bg);
+                        }
                     }
-                }
 
-                if input.is_just_pressed(Button::R) {
-                    if !check_game_over(&scenario, ScenarioType::Volcano, &mut player) {
-                        do_action(&mut scenario, ActionType::Jump, &mut player);
-                        update_full_background(&scenario, &mut full_bg);
+                    if input.is_just_pressed(Button::R) {
+                        if !check_game_over(&scenario, ScenarioType::Volcano, &mut player) {
+                            do_action(&mut scenario, ActionType::Jump, &mut player);
+                            update_full_background(&scenario, &mut full_bg);
+                        }
                     }
                 }
 
                 if player.is_dead() {
-                    break;
+                    if death_counter > 50 {
+                        break;
+                    }
+                    death_counter += 1;
                 }
-
-                counter += 1;
             }
 
             show_game_over_screen(&mut gfx, &mut sfx);

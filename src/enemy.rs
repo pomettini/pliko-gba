@@ -14,6 +14,7 @@ include_aseprite_256! {
 pub struct Enemy<'a> {
     pub object: Object,
     pub tag: &'a Tag,
+    accumulator: usize,
     pub anim_frame: usize,
 }
 
@@ -22,15 +23,21 @@ impl<'a> Enemy<'a> {
         Self {
             object,
             tag,
+            accumulator: 0,
             anim_frame: 0,
         }
     }
 
     pub fn update(&mut self) {
-        self.anim_frame += 1;
-        self.anim_frame %= 2;
-
         self.object.set_sprite(self.tag.sprite(self.anim_frame));
+
+        if self.accumulator > 6 {
+            self.anim_frame += 1;
+            self.anim_frame %= 2;
+            self.accumulator = 0;
+        }
+
+        self.accumulator += 1;
     }
 
     pub fn draw(&self, frame: &mut GraphicsFrame<'_>) {

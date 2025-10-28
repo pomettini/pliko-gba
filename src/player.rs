@@ -48,6 +48,11 @@ impl Player {
         }
     }
 
+    pub fn reset(&mut self) {
+        self.state = PlayerState::Idle;
+        self.counter = num!(0.0);
+    }
+
     pub fn perform_action(&mut self, action: ActionType) {
         self.accumulator = 0;
         self.state = match action {
@@ -73,12 +78,9 @@ impl Player {
             PlayerState::Jump => player::JUMP.sprite(0).into(),
             PlayerState::Dead => player::DEATH.sprite(0).into(),
         };
-        /*
-        self.object.set_pos((55, 86));
-        self.object.set_priority(Priority::P0);
-        */
 
         if self.state == PlayerState::Dead {
+            self.counter -= num!(0.1);
             return;
         }
 
@@ -90,8 +92,6 @@ impl Player {
         }
 
         self.accumulator += 1;
-
-        // self.counter -= num!(0.05);
     }
 
     pub fn draw(&self, frame: &mut GraphicsFrame<'_>) {
@@ -99,8 +99,8 @@ impl Player {
         // println!("{test}");
 
         let position: Vector2D<Num<i32, 8>> = match self.state {
-            PlayerState::Dead => vec2(39.into(), 70.into()),
-            _ => vec2((36).into(), (73).into()),
+            PlayerState::Dead => vec2((36 - 6).into(), (71 + 3).into()),
+            _ => vec2(36.into(), 71.into()),
         };
 
         let rot_mat: AffineMatrix = AffineMatrix::from_rotation(self.counter);
