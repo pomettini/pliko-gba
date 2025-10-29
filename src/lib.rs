@@ -156,7 +156,6 @@ pub fn main(mut gba: agb::Gba) -> ! {
 
         let mut timers = gba.timers.timers();
         let mut countdown = Countdown::new(10, &mut timers.timer2, &mut timers.timer3);
-
         let mut input = ButtonController::new();
 
         let mut game_bg = RegularBackground::new(
@@ -193,10 +192,7 @@ pub fn main(mut gba: agb::Gba) -> ! {
             loop {
                 vblank.wait_for_vblank();
 
-                for _ in 0..200 {
-                    sfx.frame();
-                }
-
+                sfx.frame();
                 countdown.update();
 
                 if countdown.seconds_left() <= 0 {

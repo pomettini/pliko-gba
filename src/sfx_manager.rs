@@ -12,7 +12,9 @@ pub struct Sfx<'a> {
 }
 impl<'a> Sfx<'a> {
     pub fn frame(&mut self) {
-        self.mixer.frame();
+        for _ in 0..200 {
+            self.mixer.frame();
+        }
     }
 
     pub fn play_title_theme(&mut self) {
