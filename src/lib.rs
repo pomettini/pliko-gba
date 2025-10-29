@@ -15,6 +15,7 @@ use agb::timer::{Divider, Timer};
 use agb::{
     Gba, fixnum, include_aseprite, include_background_gfx, include_font, include_wav, println,
 };
+use alloc::borrow::ToOwned;
 use alloc::format;
 use alloc::vec::Vec;
 use fixnum::vec2;
@@ -95,23 +96,17 @@ pub fn main(mut gba: agb::Gba) -> ! {
     let mut player = Player::new();
     let mut enemies = setup_enemies();
 
-    let mut button_left = Object::new(buttons::BLUE.sprite(0));
-    button_left.set_pos((90 - 8, 135 - 7));
-
-    let mut button_middle = Object::new(buttons::GREEN.sprite(0));
-    button_middle.set_pos((111 - 8, 135 - 7));
-
-    let mut button_right = Object::new(buttons::RED.sprite(0));
-    button_right.set_pos((132 - 8, 135 - 7));
-
-    static TITLE_MUSIC: SoundData = include_wav!("sfx/title_loop.wav");
-    static GAME_MUSIC: SoundData = include_wav!("sfx/game_loop.wav");
-
-    let mut title_music = SoundChannel::new_high_priority(TITLE_MUSIC);
-    title_music.should_loop();
-
-    let mut game_music = SoundChannel::new_high_priority(GAME_MUSIC);
-    game_music.should_loop();
+    let mut buttons: [Object; 3] = [
+        Object::new(buttons::BLUE.sprite(0))
+            .set_pos((90 - 8, 135 - 7))
+            .to_owned(),
+        Object::new(buttons::GREEN.sprite(0))
+            .set_pos((111 - 8, 135 - 7))
+            .to_owned(),
+        Object::new(buttons::RED.sprite(0))
+            .set_pos((132 - 8, 135 - 7))
+            .to_owned(),
+    ];
 
     let mut sfx = Sfx::create(gba.mixer.mixer(Frequency::Hz18157));
     let mut gfx = gba.graphics.get();
@@ -138,7 +133,7 @@ pub fn main(mut gba: agb::Gba) -> ! {
         t2.set_divider(Divider::Divider1024).set_enabled(true);
         t3.set_cascade(true).set_enabled(true);
 
-        let mut last_ticks: u32 = 0;
+        let mut last_ticks: u32;
         let mut seconds_left: i32;
 
         let mut input = ButtonController::new();
@@ -202,7 +197,7 @@ pub fn main(mut gba: agb::Gba) -> ! {
                         }
                     }
                 }
-                
+
                 if seconds_left <= 0 {
                     player.kill();
                 }
@@ -242,9 +237,9 @@ pub fn main(mut gba: agb::Gba) -> ! {
                     enemy.draw(&mut frame);
                 }
 
-                button_left.show(&mut frame);
-                button_middle.show(&mut frame);
-                button_right.show(&mut frame);
+                for button in &mut buttons {
+                    button.show(&mut frame);
+                }
 
                 game_bg.show(&mut frame);
                 full_bg.show(&mut frame);
