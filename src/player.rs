@@ -1,8 +1,7 @@
-use agb::display::object::{AffineMode, Object, ObjectAffine, SpriteVram};
-use agb::display::{AffineMatrix, GraphicsFrame, Priority};
+use agb::display::object::{AffineMode, ObjectAffine, SpriteVram};
+use agb::display::{AffineMatrix, GraphicsFrame};
 use agb::fixnum::{Num, Vector2D, num, vec2};
-use agb::{include_aseprite, println};
-use alloc::vec;
+use agb::include_aseprite;
 
 use crate::ActionType;
 
@@ -23,25 +22,17 @@ pub enum PlayerState {
 pub struct Player {
     counter: Num<i32, 8>,
     sprite: SpriteVram,
-    // object: Object,
-    pub state: PlayerState,
+    state: PlayerState,
     accumulator: usize,
     anim_frame: usize,
 }
 
 impl Player {
     pub fn new() -> Self {
-        let mut sprite: SpriteVram = player::DEATH.sprite(0).into();
-        /*
-        let mut player = Object::new(sprite.clone());
-        player.set_pos((55, 86));
-        player.set_priority(Priority::P0);
-        */
-
+        let sprite: SpriteVram = player::IDLE.sprite(0).into();
         Self {
             counter: num!(0.0),
             sprite: sprite,
-            // object: player,
             state: PlayerState::Idle,
             accumulator: 0,
             anim_frame: 0,
@@ -96,7 +87,6 @@ impl Player {
 
     pub fn draw(&self, frame: &mut GraphicsFrame<'_>) {
         let test = num!(1.0) + ((self.counter / 10) % num!(0.5));
-        // println!("{test}");
 
         let position: Vector2D<Num<i32, 8>> = match self.state {
             PlayerState::Dead => vec2((36 - 6).into(), (71 + 3).into()),
@@ -109,9 +99,6 @@ impl Player {
 
         let final_transform: AffineMatrix = pos_mat * rot_mat * scale_mat;
 
-        // let affine_matrix = AffineMatrix::from_rotation(num!(0.25));
-        // let affine_matrix_instance = AffineMatrix::new(affine_matrix);
-
         ObjectAffine::new(
             self.sprite.clone(),
             final_transform.into(),
@@ -119,7 +106,5 @@ impl Player {
         )
         .set_pos(final_transform.position().round())
         .show(frame);
-
-        // self.object.show(frame);
     }
 }

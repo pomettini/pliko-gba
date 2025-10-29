@@ -10,11 +10,9 @@ use agb::display::tiled::{RegularBackground, RegularBackgroundSize, TileFormat, 
 use agb::display::{Palette16, Priority, Rgb15};
 use agb::input::{Button, ButtonController};
 use agb::interrupt::VBlank;
-use agb::sound::mixer::{Frequency, SoundChannel, SoundData};
-use agb::timer::{Divider, Timer};
-use agb::{
-    Gba, fixnum, include_aseprite, include_background_gfx, include_font, include_wav, println,
-};
+use agb::sound::mixer::Frequency;
+use agb::timer::Divider;
+use agb::{fixnum, include_aseprite, include_background_gfx, include_font};
 use alloc::borrow::ToOwned;
 use alloc::format;
 use alloc::vec::Vec;
@@ -58,11 +56,42 @@ include_aseprite!(
     "gfx/buttons.aseprite",
 );
 
+#[derive(Clone, Copy)]
 pub enum ActionType {
     Attack,
     Shield,
     Jump,
 }
+
+#[derive(Clone, Copy)]
+pub struct Binding {
+    button: Button,
+    scenario: ScenarioType,
+    action: ActionType,
+}
+
+const BINDINGS: &[Binding] = &[
+    Binding {
+        button: Button::L,
+        scenario: ScenarioType::Water,
+        action: ActionType::Attack,
+    },
+    Binding {
+        button: Button::R,
+        scenario: ScenarioType::Volcano,
+        action: ActionType::Jump,
+    },
+    Binding {
+        button: Button::B,
+        scenario: ScenarioType::Swamp,
+        action: ActionType::Shield,
+    },
+    Binding {
+        button: Button::A,
+        scenario: ScenarioType::Swamp,
+        action: ActionType::Shield,
+    },
+];
 
 pub fn update_full_background(scenario: &Scenario, background: &mut RegularBackground) {
     let bg = match scenario.state[3] {
@@ -259,27 +288,13 @@ pub fn main(mut gba: agb::Gba) -> ! {
                 frame.commit();
 
                 if !player.is_dead() {
-                    if input.is_just_pressed(Button::L) {
-                        if !check_game_over(&scenario, ScenarioType::Water, &mut player) {
-                            do_action(&mut scenario, ActionType::Attack, &mut player);
-                            update_full_background(&scenario, &mut full_bg);
-                            enemies_killed += 1;
-                        }
-                    }
-
-                    if input.is_just_pressed(Button::B) || input.is_just_pressed(Button::A) {
-                        if !check_game_over(&scenario, ScenarioType::Swamp, &mut player) {
-                            do_action(&mut scenario, ActionType::Shield, &mut player);
-                            update_full_background(&scenario, &mut full_bg);
-                            enemies_killed += 1;
-                        }
-                    }
-
-                    if input.is_just_pressed(Button::R) {
-                        if !check_game_over(&scenario, ScenarioType::Volcano, &mut player) {
-                            do_action(&mut scenario, ActionType::Jump, &mut player);
-                            update_full_background(&scenario, &mut full_bg);
-                            enemies_killed += 1;
+                    for binding in BINDINGS {
+                        if input.is_just_pressed(binding.button) {
+                            if !check_game_over(&scenario, binding.scenario, &mut player) {
+                                do_action(&mut scenario, binding.action, &mut player);
+                                update_full_background(&scenario, &mut full_bg);
+                                enemies_killed += 1;
+                            }
                         }
                     }
                 }
