@@ -32,7 +32,7 @@ impl Player {
         let sprite: SpriteVram = player::IDLE.sprite(0).into();
         Self {
             counter: num!(0.0),
-            sprite: sprite,
+            sprite,
             state: PlayerState::Idle,
             accumulator: 0,
             anim_frame: 0,

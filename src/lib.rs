@@ -11,7 +11,6 @@ use agb::display::{Palette16, Priority, Rgb15};
 use agb::input::{Button, ButtonController};
 use agb::interrupt::VBlank;
 use agb::sound::mixer::Frequency;
-use agb::timer::Divider;
 use agb::{fixnum, include_aseprite, include_background_gfx, include_font};
 use alloc::borrow::ToOwned;
 use alloc::format;
@@ -21,12 +20,14 @@ use player::*;
 
 extern crate alloc;
 
+use crate::countdown::Countdown;
 use crate::enemy::setup_enemies;
 use crate::game_over::show_game_over_screen;
 use crate::scenario::{Scenario, ScenarioType};
 use crate::sfx_manager::Sfx;
 use crate::title_screen::show_title_screen;
 
+pub mod countdown;
 pub mod enemy;
 pub mod game_over;
 pub mod player;
@@ -108,12 +109,10 @@ pub fn check_game_over(
     player: &mut Player,
 ) -> bool {
     let wrong_action = scenario.state[3] != scenario_type;
-
     if wrong_action {
         player.kill();
     }
-
-    return wrong_action;
+    wrong_action
 }
 
 pub fn do_action(scenario: &mut Scenario, action: ActionType, player: &mut Player) {
@@ -155,15 +154,8 @@ pub fn main(mut gba: agb::Gba) -> ! {
     loop {
         let vblank = VBlank::get();
 
-        let timers = gba.timers.timers();
-        let mut t2 = timers.timer2;
-        let mut t3 = timers.timer3;
-
-        t2.set_divider(Divider::Divider1024).set_enabled(true);
-        t3.set_cascade(true).set_enabled(true);
-
-        let mut last_ticks: u32;
-        let mut seconds_left: i32;
+        let mut timers = gba.timers.timers();
+        let mut countdown = Countdown::new(10, &mut timers.timer2, &mut timers.timer3);
 
         let mut input = ButtonController::new();
 
@@ -194,12 +186,8 @@ pub fn main(mut gba: agb::Gba) -> ! {
             death_counter = 0;
 
             player.reset();
-
-            last_ticks = 0;
-            seconds_left = 10;
-
-            t2.set_enabled(true);
-            t3.set_enabled(true);
+            countdown.reset();
+            countdown.set_enabled(true);
 
             // Game update
             loop {
@@ -209,25 +197,9 @@ pub fn main(mut gba: agb::Gba) -> ! {
                     sfx.frame();
                 }
 
-                let low = t2.value() as u32;
-                let high = t3.value() as u32;
-                let ticks = (high << 16) | low;
+                countdown.update();
 
-                let delta = ticks.wrapping_sub(last_ticks);
-                last_ticks = ticks;
-
-                static mut ACC: u32 = 0;
-                unsafe {
-                    ACC += delta;
-                    if ACC >= 0x4000 {
-                        ACC -= 0x4000;
-                        if seconds_left > 0 {
-                            seconds_left -= 1;
-                        }
-                    }
-                }
-
-                if seconds_left <= 0 {
+                if countdown.seconds_left() <= 0 {
                     player.kill();
                 }
 
@@ -247,7 +219,7 @@ pub fn main(mut gba: agb::Gba) -> ! {
                     .collect();
 
                 let time_layout = Layout::new(
-                    &format!("Time: {seconds_left}"),
+                    &format!("Time: {0}", countdown.seconds_left()),
                     &FONT,
                     AlignmentKind::Right,
                     16,
@@ -283,28 +255,23 @@ pub fn main(mut gba: agb::Gba) -> ! {
                     object.show(&mut frame);
                 }
 
-                // sfx.frame();
                 input.update();
                 frame.commit();
 
                 if !player.is_dead() {
                     for binding in BINDINGS {
-                        if input.is_just_pressed(binding.button) {
-                            if !check_game_over(&scenario, binding.scenario, &mut player) {
-                                do_action(&mut scenario, binding.action, &mut player);
-                                update_full_background(&scenario, &mut full_bg);
-                                enemies_killed += 1;
-                            }
+                        if input.is_just_pressed(binding.button)
+                            && !check_game_over(&scenario, binding.scenario, &mut player)
+                        {
+                            do_action(&mut scenario, binding.action, &mut player);
+                            update_full_background(&scenario, &mut full_bg);
+                            enemies_killed += 1;
                         }
                     }
                 }
 
                 if player.is_dead() {
-                    // TODO: Should be set once
-                    t2.set_enabled(false);
-                    // TODO: Should be set once
-                    t3.set_enabled(false);
-
+                    countdown.set_enabled(false);
                     if death_counter > 50 {
                         break;
                     }

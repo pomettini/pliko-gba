@@ -12,10 +12,10 @@ include_aseprite_256! {
 }
 
 pub struct Enemy<'a> {
-    pub object: Object,
-    pub tag: &'a Tag,
+    object: Object,
+    tag: &'a Tag,
     accumulator: usize,
-    pub anim_frame: usize,
+    anim_frame: usize,
 }
 
 impl<'a> Enemy<'a> {
