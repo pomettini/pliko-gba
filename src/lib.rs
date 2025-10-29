@@ -114,7 +114,6 @@ pub fn main(mut gba: agb::Gba) -> ! {
     game_music.should_loop();
 
     let mut sfx = Sfx::create(gba.mixer.mixer(Frequency::Hz18157));
-
     let mut gfx = gba.graphics.get();
 
     let score_text_render = ObjectTextRenderer::new(PALETTE.into(), Size::S16x16);
@@ -125,7 +124,8 @@ pub fn main(mut gba: agb::Gba) -> ! {
     sfx.stop();
     sfx.play_game_theme();
 
-    let mut death_counter = 0;
+    let mut enemies_killed: usize;
+    let mut death_counter: usize;
 
     // Game setup
     loop {
@@ -139,7 +139,7 @@ pub fn main(mut gba: agb::Gba) -> ! {
         t3.set_cascade(true).set_enabled(true);
 
         let mut last_ticks: u32 = 0;
-        let mut seconds_left: i32 = 60;
+        let mut seconds_left: i32;
 
         let mut input = ButtonController::new();
 
@@ -166,8 +166,16 @@ pub fn main(mut gba: agb::Gba) -> ! {
         loop {
             VRAM_MANAGER.set_background_palettes(background::PALETTES);
 
+            enemies_killed = 0;
             death_counter = 0;
+
             player.reset();
+
+            last_ticks = 0;
+            seconds_left = 10;
+
+            t2.set_enabled(true);
+            t3.set_enabled(true);
 
             // Game update
             loop {
@@ -187,19 +195,28 @@ pub fn main(mut gba: agb::Gba) -> ! {
                 static mut ACC: u32 = 0;
                 unsafe {
                     ACC += delta;
-                    if ACC >= 16384 {
-                        ACC -= 16384;
+                    if ACC >= 0x4000 {
+                        ACC -= 0x4000;
                         if seconds_left > 0 {
                             seconds_left -= 1;
                         }
                     }
                 }
+                
+                if seconds_left <= 0 {
+                    player.kill();
+                }
 
                 player.update();
                 enemies[3].update();
 
-                let score_layout =
-                    Layout::new(&format!("Score: 0"), &FONT, AlignmentKind::Left, 16, 80);
+                let score_layout = Layout::new(
+                    &format!("Score: {enemies_killed}"),
+                    &FONT,
+                    AlignmentKind::Left,
+                    16,
+                    80,
+                );
 
                 let score_objects: Vec<_> = score_layout
                     .map(|x| score_text_render.show(&x, vec2(8, 3)))
@@ -251,6 +268,7 @@ pub fn main(mut gba: agb::Gba) -> ! {
                         if !check_game_over(&scenario, ScenarioType::Water, &mut player) {
                             do_action(&mut scenario, ActionType::Attack, &mut player);
                             update_full_background(&scenario, &mut full_bg);
+                            enemies_killed += 1;
                         }
                     }
 
@@ -258,6 +276,7 @@ pub fn main(mut gba: agb::Gba) -> ! {
                         if !check_game_over(&scenario, ScenarioType::Swamp, &mut player) {
                             do_action(&mut scenario, ActionType::Shield, &mut player);
                             update_full_background(&scenario, &mut full_bg);
+                            enemies_killed += 1;
                         }
                     }
 
@@ -265,11 +284,17 @@ pub fn main(mut gba: agb::Gba) -> ! {
                         if !check_game_over(&scenario, ScenarioType::Volcano, &mut player) {
                             do_action(&mut scenario, ActionType::Jump, &mut player);
                             update_full_background(&scenario, &mut full_bg);
+                            enemies_killed += 1;
                         }
                     }
                 }
 
                 if player.is_dead() {
+                    // TODO: Should be set once
+                    t2.set_enabled(false);
+                    // TODO: Should be set once
+                    t3.set_enabled(false);
+
                     if death_counter > 50 {
                         break;
                     }
