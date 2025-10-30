@@ -5,6 +5,7 @@ use agb::{
     },
     include_background_gfx,
     input::{Button, ButtonController},
+    rng,
 };
 
 use crate::sfx_manager::Sfx;
@@ -41,5 +42,8 @@ pub fn show_title_screen(gfx: &mut Graphics, sfx: &mut Sfx) {
         map.show(&mut frame);
 
         frame.commit();
+
+        // Make the random number generator harder to predict
+        let _ = rng::next_i32();
     }
 }

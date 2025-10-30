@@ -10,6 +10,7 @@ use agb::display::tiled::RegularBackgroundSize;
 use agb::display::tiled::{RegularBackground, TileFormat, VRAM_MANAGER};
 use agb::input::ButtonController;
 use agb::interrupt::VBlank;
+use agb::rng::RandomNumberGenerator;
 use agb::sound::mixer::Frequency;
 use agb::{fixnum, include_background_gfx};
 use alloc::format;
@@ -74,6 +75,8 @@ pub fn do_action(scenario: &mut Scenario, action: ActionType, player: &mut Playe
 }
 
 pub fn main(mut gba: agb::Gba) -> ! {
+    let mut rng = RandomNumberGenerator::new();
+
     let mut player = Player::new();
     let mut enemies = setup_enemies();
     let mut buttons = get_buttons();
@@ -111,7 +114,7 @@ pub fn main(mut gba: agb::Gba) -> ! {
             TileFormat::FourBpp,
         );
 
-        let mut scenario = Scenario::new();
+        let mut scenario = Scenario::new(rng);
         scenario.randomize();
 
         update_full_background(&scenario, &mut full_bg);
@@ -189,9 +192,7 @@ pub fn main(mut gba: agb::Gba) -> ! {
                             enemies_killed += 1;
                         }
                     }
-                }
-
-                if player.is_dead() {
+                } else {
                     countdown.set_enabled(false);
                     if death_counter > 50 {
                         break;
