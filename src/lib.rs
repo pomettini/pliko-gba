@@ -4,23 +4,22 @@
 #![cfg_attr(test, reexport_test_harness_main = "test_main")]
 #![cfg_attr(test, test_runner(agb::test_runner::test_runner))]
 
-use agb::display::font::{AlignmentKind, Font, Layout, ObjectTextRenderer};
-use agb::display::object::{Object, Size};
-use agb::display::tiled::{RegularBackground, RegularBackgroundSize, TileFormat, VRAM_MANAGER};
-use agb::display::{Palette16, Priority, Rgb15};
+use agb::display::Priority;
+use agb::display::font::AlignmentKind;
+use agb::display::tiled::RegularBackgroundSize;
+use agb::display::tiled::{RegularBackground, TileFormat, VRAM_MANAGER};
 use agb::input::ButtonController;
 use agb::interrupt::VBlank;
 use agb::sound::mixer::Frequency;
-use agb::{fixnum, include_aseprite, include_background_gfx, include_font};
-use alloc::borrow::ToOwned;
+use agb::{fixnum, include_background_gfx};
 use alloc::format;
-use alloc::vec::Vec;
 use fixnum::vec2;
 use player::*;
 
 extern crate alloc;
 
 use crate::binding::{ActionType, BINDINGS};
+use crate::buttons::get_buttons;
 use crate::countdown::Countdown;
 use crate::enemy::setup_enemies;
 use crate::game_over::show_game_over_screen;
@@ -30,6 +29,7 @@ use crate::sfx_manager::Sfx;
 use crate::title_screen::show_title_screen;
 
 pub mod binding;
+pub mod buttons;
 pub mod countdown;
 pub mod enemy;
 pub mod game_over;
@@ -45,11 +45,6 @@ include_background_gfx!(
     BLUE => deduplicate "gfx/background-full-blue.png",
     RED => deduplicate "gfx/background-full-red.png",
     GREEN => deduplicate "gfx/background-full-green.png",
-);
-
-include_aseprite!(
-    mod buttons,
-    "gfx/buttons.aseprite",
 );
 
 pub fn update_full_background(scenario: &Scenario, background: &mut RegularBackground) {
@@ -81,18 +76,7 @@ pub fn do_action(scenario: &mut Scenario, action: ActionType, player: &mut Playe
 pub fn main(mut gba: agb::Gba) -> ! {
     let mut player = Player::new();
     let mut enemies = setup_enemies();
-
-    let mut buttons: [Object; 3] = [
-        Object::new(buttons::BLUE.sprite(0))
-            .set_pos((90 - 8, 135 - 7))
-            .to_owned(),
-        Object::new(buttons::GREEN.sprite(0))
-            .set_pos((111 - 8, 135 - 7))
-            .to_owned(),
-        Object::new(buttons::RED.sprite(0))
-            .set_pos((132 - 8, 135 - 7))
-            .to_owned(),
-    ];
+    let mut buttons = get_buttons();
 
     let mut sfx = Sfx::create(gba.mixer.mixer(Frequency::Hz18157));
     let mut gfx = gba.graphics.get();

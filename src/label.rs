@@ -20,7 +20,6 @@ static FONT: Font = include_font!("gfx/ark-pixel-10px-proportional.ttf", 10);
 
 pub struct Label {
     objects: Vec<Object>,
-    text_render: ObjectTextRenderer,
 }
 
 impl Label {
@@ -34,10 +33,7 @@ impl Label {
         let score_layout = Layout::new(text, &FONT, alignment, max_group_width, max_line_length);
         let text_render = ObjectTextRenderer::new(PALETTE.into(), Size::S16x16);
         let objects = score_layout.map(|x| text_render.show(&x, offset)).collect();
-        Self {
-            objects,
-            text_render,
-        }
+        Self { objects }
     }
 
     pub fn draw(&mut self, frame: &mut GraphicsFrame<'_>) {
