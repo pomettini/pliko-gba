@@ -4,7 +4,7 @@ use agb::{
         object::{Object, Tag},
     },
     include_aseprite,
-    rng::{self, RandomNumberGenerator},
+    rng::{self},
 };
 
 include_aseprite! {
@@ -56,7 +56,6 @@ const fn get_object(s_size: &ScenarioSize, s_type: &ScenarioType) -> &'static Ta
 }
 
 pub struct Scenario {
-    rng: RandomNumberGenerator,
     pub state: [ScenarioType; 4],
     small_sprite: [Object; 3],
     medium_sprite: [Object; 4],
@@ -64,9 +63,8 @@ pub struct Scenario {
 }
 
 impl Scenario {
-    pub fn new(rng: RandomNumberGenerator) -> Self {
+    pub fn new() -> Self {
         Self {
-            rng,
             state: [
                 ScenarioType::Water,
                 ScenarioType::Water,
