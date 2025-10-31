@@ -135,7 +135,8 @@ pub fn main(mut gba: agb::Gba) -> ! {
                 countdown.update();
 
                 if countdown.seconds_left() <= 0 {
-                    player.kill();
+                    countdown.set_enabled(false);
+                    break;
                 }
 
                 player.update();
